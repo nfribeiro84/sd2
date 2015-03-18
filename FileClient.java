@@ -1,6 +1,8 @@
 
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.rmi.*;
 
 /**
  * Classe base do cliente
@@ -21,10 +23,26 @@ public class FileClient
 	 * Devolve um array com os servidores a correr caso o name== null ou o URL dos
 	 * servidores com nome name.
 	 */
-	protected String[] servers( String name) {
+	protected String[] servers(String name) 
+	{
 		System.err.println( "exec: servers");
+		String[] result;
 		//TODO: completar
-		return null;
+		try 
+		{
+			IContactServer contactServer = (IContactServer) Naming.lookup(this.contactServerURL);
+			if (name == null)
+				result = contactServer.servers();
+			else
+				result = contactServer.servers(name);
+		} 
+		catch (Exception e) 
+		{
+			result = new String[1];
+			result[0] = "Ocorreu um erro ao ligar ao servidor de contacto. Erro: " + e.toString();			
+		}
+		
+		return result;
 	}
 	
 	/**
@@ -116,35 +134,44 @@ public class FileClient
 	protected void doit() throws IOException {
 		BufferedReader reader = new BufferedReader( new InputStreamReader( System.in));
 		
-		for( ; ; ) {
+		for( ; ; ) 
+		{
 			String line = reader.readLine();
 			if( line == null)
 				break;
 			String[] cmd = line.split(" ");
-			if( cmd[0].equalsIgnoreCase("servers")) {
+			if( cmd[0].equalsIgnoreCase("servers")) 
+			{
 				String[] s = servers( cmd.length == 1 ? null : cmd[2]);
 				
 				if( s == null)
 					System.out.println( "error");
-				else {
+				else 
+				{
 					System.out.println( s.length);
 					for( int i = 0; i < s.length; i++)
 						System.out.println( s[i]);
 				}
-			} else if( cmd[0].equalsIgnoreCase("ls")) {
+			} 
+			else if( cmd[0].equalsIgnoreCase("ls")) 
+			{
 				String[] dirserver = cmd[1].split("@");
 				String server = dirserver.length == 1 ? null : dirserver[0];
 				boolean isURL = dirserver.length == 1 ? false : dirserver[1].indexOf('/') >= 0;
 				String dir = dirserver.length == 1 ? dirserver[0] : dirserver[1];
 				
 				String[] res = dir( server, isURL, dir);
-				if( res != null) {
+				if( res != null) 
+				{
 					System.out.println( res.length);
 					for( int i = 0; i < res.length; i++)
 						System.out.println( res[i]);
-				} else
+				} 
+				else
 					System.out.println( "error");
-			} else if( cmd[0].equalsIgnoreCase("mkdir")) {
+			} 
+			else if( cmd[0].equalsIgnoreCase("mkdir")) 
+			{
 				String[] dirserver = cmd[1].split("@");
 				String server = dirserver.length == 1 ? null : dirserver[0];
 				boolean isURL = dirserver.length == 1 ? false : dirserver[1].indexOf('/') >= 0;
@@ -155,7 +182,9 @@ public class FileClient
 					System.out.println( "success");
 				else
 					System.out.println( "error");
-			} else if( cmd[0].equalsIgnoreCase("rmdir")) {
+			} 
+			else if( cmd[0].equalsIgnoreCase("rmdir")) 
+			{
 				String[] dirserver = cmd[1].split("@");
 				String server = dirserver.length == 1 ? null : dirserver[0];
 				boolean isURL = dirserver.length == 1 ? false : dirserver[1].indexOf('/') >= 0;
@@ -166,7 +195,9 @@ public class FileClient
 					System.out.println( "success");
 				else
 					System.out.println( "error");
-			} else if( cmd[0].equalsIgnoreCase("rm")) {
+			} 
+			else if( cmd[0].equalsIgnoreCase("rm")) 
+			{
 				String[] dirserver = cmd[1].split("@");
 				String server = dirserver.length == 1 ? null : dirserver[0];
 				boolean isURL = dirserver.length == 1 ? false : dirserver[1].indexOf('/') >= 0;
@@ -177,19 +208,25 @@ public class FileClient
 					System.out.println( "success");
 				else
 					System.out.println( "error");
-			} else if( cmd[0].equalsIgnoreCase("getattr")) {
+			} 
+			else if( cmd[0].equalsIgnoreCase("getattr")) 
+			{
 				String[] dirserver = cmd[1].split("@");
 				String server = dirserver.length == 1 ? null : dirserver[0];
 				boolean isURL = dirserver.length == 1 ? false : dirserver[1].indexOf('/') >= 0;
 				String path = dirserver.length == 1 ? dirserver[0] : dirserver[1];
 
 				FileInfo info = getAttr( server, isURL, path);
-				if( info != null) {
+				if( info != null) 
+				{
 					System.out.println( info);
 					System.out.println( "success");
-				} else
+				} 
+				else
 					System.out.println( "error");
-			} else if( cmd[0].equalsIgnoreCase("cp")) {
+			} 
+			else if( cmd[0].equalsIgnoreCase("cp")) 
+			{
 				String[] dirserver1 = cmd[1].split("@");
 				String server1 = dirserver1.length == 1 ? null : dirserver1[0];
 				boolean isURL1 = dirserver1.length == 1 ? false : dirserver1[1].indexOf('/') >= 0;
@@ -205,7 +242,9 @@ public class FileClient
 					System.out.println( "success");
 				else
 					System.out.println( "error");
-			} else if( cmd[0].equalsIgnoreCase("help")) {
+			} 
+			else if( cmd[0].equalsIgnoreCase("help")) 
+			{
 				System.out.println("servers - lista nomes de servidores a executar");
 				System.out.println("servers nome - lista URL dos servidores com nome nome");
 				System.out.println("ls server@dir - lista ficheiros/directorias presentes na directoria dir (. e .. tem o significado habitual), caso existam ficheiros com o mesmo nome devem ser apresentados como nome@server;");
@@ -214,7 +253,8 @@ public class FileClient
 				System.out.println("cp path1 path2 - copia o ficheiro path1 para path2; quando path representa um ficheiro num servidor deve ter a forma server:path, quando representa um ficheiro local deve ter a forma path");
 				System.out.println("rm path - remove o ficheiro path");
 				System.out.println("getattr path - apresenta informacao sobre o ficheiro/directoria path, incluindo: nome, boolean indicando se e ficheiro, data da criacao, data da ultima modificacao");
-			} else if( cmd[0].equalsIgnoreCase("exit"))
+			} 
+			else if( cmd[0].equalsIgnoreCase("exit"))
 				break;
 
 		}
