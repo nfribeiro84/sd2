@@ -5,10 +5,11 @@ import java.rmi.server.*;
 import java.rmi.registry.*;
 import java.util.*;
 import java.io.*;
+import java.lang.Thread;
 
 public class ContactServer
 		extends UnicastRemoteObject
-		implements IContactServer
+		implements IContactServer, Runnable
 {
 
 	private static final long serialVersionUID = 1L;
@@ -35,6 +36,13 @@ public class ContactServer
 	@Override
 	public String[] servers() throws RemoteException 
 	{
+		try {
+			//@TODO move this exception to interface
+
+			System.out.println(java.rmi.server.RemoteServer.getClientHost());
+		} catch (ServerNotActiveException e) {}
+
+
 		List<String> result = new ArrayList<String>();
 		for(Map.Entry<String, List<String>> entry : fileServers.entrySet()) {
 			result.add(entry.getKey());
@@ -44,8 +52,20 @@ public class ContactServer
 
 
 	@Override
-	public String[] servers(String name) throws RemoteException {
-		return new String[1];
+	public String[] servers(String name) throws RemoteException 
+	{
+		
+		List<String> result = this.fileServers.get(name);
+		if(result != null) {
+			return result.toArray(new String[result.size()]);
+		} else {
+			return new String[0];
+		}
+	}
+
+	@Override
+	public String subscribe() throws RemoteException{
+		return "";
 	}
 
 	//@Override
@@ -54,6 +74,40 @@ public class ContactServer
 		ips.add(ip);
 		this.fileServers.put(name, ips);
 		System.out.println("Added server ip: " + ip + " to servename: " + name);
+	}
+
+	//@Override
+	private void removeServer(String name, String ip) {
+		
+		List<String> ips = this.fileServers.get(name);
+		if(ips != null) {
+			ips.remove(ip);
+			if (ips.size() == 0) {
+				//remove o ip do nome do servidor correpondente
+				this.fileServers.remove(name);
+				System.out.println("Removed servename: " + name);
+			} else {
+				// remove o nome do servidor do mapa se nao tem ips
+				System.out.println("Removed server ip: " + ip + " in servename: " + name);	
+			}
+		}
+	}
+
+	private void startThread() {
+
+	}
+
+	@Override
+	public void run()	{
+		try {
+			for(;;) {
+		  	System.out.println("Runnable running" + this.fileServers.size());	
+		  	if(this.fileServers.containsKey("CAE__")) {
+		  		this.removeServer("CAE__", "100.100.1.2");
+		  	}
+		  	Thread.sleep(1000);
+			}
+		} catch (InterruptedException e) {}
 	}
 
 
@@ -77,8 +131,15 @@ public class ContactServer
 			Naming.rebind( "/myContactServer", server);
 			System.out.println( "DirServer bound in registry");
 
+
+			Thread thread = new Thread(server);
+ 			thread.start();
+
 			//add server
-			server.addServer("A", "100.100.1.1");
+			server.addServer("CAE", "100.100.1.1");
+			Thread.sleep(5000);
+			server.addServer("CAE__", "100.100.1.2");
+
 		} catch( Throwable th) {
 			th.printStackTrace();
 		}

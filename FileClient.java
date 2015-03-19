@@ -141,7 +141,7 @@ public class FileClient
 			String[] cmd = line.split(" ");
 			if( cmd[0].equalsIgnoreCase("servers")) 
 			{
-				String[] s = servers( cmd.length == 1 ? null : cmd[2]);
+				String[] s = servers( cmd.length == 1 ? null : cmd[1]);
 				
 				if( s == null)
 					System.out.println( "error");
