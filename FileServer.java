@@ -19,15 +19,29 @@ public class FileServer
 
 	private String basePathName;
 	private File basePath;
-
-	protected FileServer( String pathname) throws RemoteException {
+	private String contactServerURL;
+	private String fileServerName;
+	
+	protected FileServer( String pathname, String url, String name) throws RemoteException {
 		super();
 		this.basePathName = pathname;
 		basePath = new File( pathname);
+		this.contactServerURL = url;
+		this.fileServerName = name;
+	}
+	
+	/**
+	 * Método que serve para indicar que ainda está vivo
+	 * @return "OK"
+	 */
+	public String pong()
+	{
+		return "OK";
 	}
 
 	@Override
-	public String[] dir(String path) throws RemoteException, InfoNotFoundException {
+	public String[] dir(String path) throws RemoteException, InfoNotFoundException 
+	{
 		File f = new File( basePath, path);
 		if( f.exists())
 			return f.list();

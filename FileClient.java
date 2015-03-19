@@ -27,7 +27,6 @@ public class FileClient
 	{
 		System.err.println( "exec: servers");
 		String[] result;
-		//TODO: completar
 		try 
 		{
 			IContactServer contactServer = (IContactServer) Naming.lookup(this.contactServerURL);
@@ -132,10 +131,10 @@ public class FileClient
 
 	
 	protected void doit() throws IOException {
-		BufferedReader reader = new BufferedReader( new InputStreamReader( System.in));
-		
+		BufferedReader reader = new BufferedReader( new InputStreamReader( System.in));		
 		for( ; ; ) 
 		{
+			System.out.print("> ");
 			String line = reader.readLine();
 			if( line == null)
 				break;
