@@ -20,6 +20,6 @@ public interface IContactServer extends Remote
 	/**
 	 * Adiciona um novo servidor à lista de servidores conhecidos.
 	 */
-	//private void addServer(String name, String ip) throws RemoteException;
+	public String subscribe() throws RemoteException;
 	
 }
