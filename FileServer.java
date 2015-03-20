@@ -27,7 +27,7 @@ public class FileServer
 		super();
 		this.basePathName = pathname;
 		basePath = new File( pathname);
-		this.contactServerURL = url;
+		this.contactServerURL = "rmi://" + url + "/" + name;
 		this.fileServerName = name;
 	}
 	
@@ -127,7 +127,7 @@ public class FileServer
 			}
 
 			FileServer server = new FileServer(path, args[1], args[2]);
-			Naming.rebind( "/myFileServer", server);
+			Naming.rebind( args[2], server);
 			System.out.println( "DirServer bound in registry");
 			System.out.println(server.connectToContact());
 		} catch( Throwable th) {
