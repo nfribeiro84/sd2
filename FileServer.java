@@ -22,12 +22,27 @@ public class FileServer
 	private String contactServerURL;
 	private String fileServerName;
 	
-	protected FileServer( String pathname, String url, String name) throws RemoteException {
+	protected FileServer( String pathname, String url, String name) throws RemoteException 
+	{
 		super();
 		this.basePathName = pathname;
 		basePath = new File( pathname);
 		this.contactServerURL = url;
 		this.fileServerName = name;
+	}
+	
+	private String connectToContact()
+	{
+		try
+		{
+			IContactServer contactServer = (IContactServer) Naming.lookup(this.contactServerURL);
+			if(contactServer.subscribe(this.fileServerName))
+				return "Successfully subscribed to Contact Server";
+		}
+		catch(Exception e)
+		{
+			return "Error subscribing to Contact Server. Error: " + e.getMessage();
+		}		
 	}
 	
 	/**
@@ -110,9 +125,10 @@ public class FileServer
 				// do nothing - already started with rmiregistry
 			}
 
-			FileServer server = new FileServer( path);
+			FileServer server = new FileServer(path, args[1], args[2]);
 			Naming.rebind( "/myFileServer", server);
 			System.out.println( "DirServer bound in registry");
+			System.out.println(server.connectToContact());
 		} catch( Throwable th) {
 			th.printStackTrace();
 		}

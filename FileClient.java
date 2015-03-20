@@ -13,7 +13,8 @@ public class FileClient
 	String contactServerURL;
 	String username;
 	
-	protected FileClient( String url, String username) {
+	protected FileClient( String url, String username) 
+	{
 		this.contactServerURL = url;
 		this.username = username;
 	}
@@ -51,10 +52,27 @@ public class FileClient
 	 * Caso contrario e o nome do servidor. Nesse caso deve listar os ficheiro dum servidor com esse nome.
 	 * Devolve null em caso de erro.
 	 * NOTA: nao deve lancar excepcao. 
+	 * 
 	 */
-	protected String[] dir( String server, boolean isURL, String dir) {
+	protected String[] dir( String server, boolean isURL, String dir)
+	{
 		System.err.println( "exec: ls " + dir + " no servidor " + server + " - e url : " + isURL);
-		//TODO: completar
+		if(isURL)
+		{
+			try
+			{
+				IFileServer servidor = (IFileServer) Naming.lookup("//" + server + "/myFileServer");
+				return servidor.dir(dir);
+			}
+			catch(Exception e)
+			{
+				return null;
+			}
+		}
+		else
+		{
+			
+		}
 		return null;
 	}
 	
