@@ -65,7 +65,11 @@ public class ContactServer
 
 	//@Override
 	public boolean subscribe(String name) throws RemoteException, ServerExistsException{
-		String client_ip = java.rmi.server.RemoteServer.getClientHost();
+		String client_ip = "";
+		try {
+			client_ip = java.rmi.server.RemoteServer.getClientHost();
+		} catch (ServerNotActiveException e) {}
+
 		if (serverExists(name, client_ip))
 			throw new ServerExistsException("Server " + name + "@" + client_ip + " exists");
 
