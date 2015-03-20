@@ -63,9 +63,14 @@ public class ContactServer
 		}
 	}
 
-	@Override
-	public String subscribe() throws RemoteException{
-		return "";
+	//@Override
+	public boolean subscribe(String name) throws RemoteException, ServerExistsException{
+		String client_ip = java.rmi.server.RemoteServer.getClientHost();
+		if (serverExists(name, client_ip))
+			throw new ServerExistsException("Server " + name + "@" + client_ip + " exists");
+
+		addServer(name, client_ip);
+		return true;
 	}
 
 	//@Override
@@ -74,6 +79,15 @@ public class ContactServer
 		ips.add(ip);
 		this.fileServers.put(name, ips);
 		System.out.println("Added server ip: " + ip + " to servename: " + name);
+	}
+
+	private boolean serverExists(String name, String ip) {
+		if (this.fileServers.containsKey(name)) {
+			if (this.fileServers.get(name).contains(ip)) {
+				return true;	
+			}
+		}
+		return false;
 	}
 
 	//@Override
