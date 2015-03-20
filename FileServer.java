@@ -46,7 +46,7 @@ public class FileServer
 	}
 	
 	/**
-	 * Método que serve para indicar que ainda está vivo
+	 * Metodo que serve para indicar que ainda esta vivo
 	 * @return "OK"
 	 */
 	public String pong()
