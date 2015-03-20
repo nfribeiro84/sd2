@@ -38,6 +38,7 @@ public class FileServer
 			IContactServer contactServer = (IContactServer) Naming.lookup(this.contactServerURL);
 			if(contactServer.subscribe(this.fileServerName))
 				return "Successfully subscribed to Contact Server";
+			else return "Error subscribing to Contact Server. No Response";
 		}
 		catch(Exception e)
 		{
