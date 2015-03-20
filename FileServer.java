@@ -27,7 +27,7 @@ public class FileServer
 		super();
 		this.basePathName = pathname;
 		basePath = new File( pathname);
-		this.contactServerURL = "rmi://" + url + "/" + name;
+		this.contactServerURL = "rmi://" + url;
 		this.fileServerName = name;
 	}
 	
@@ -42,7 +42,8 @@ public class FileServer
 		}
 		catch(Exception e)
 		{
-			return "Error subscribing to Contact Server. Error: " + e.getMessage();
+			e.printStackTrace();
+			return "Error subscribing to Contact Server. Error: " + e.getMessage() + ":" + this.contactServerURL;
 		}		
 	}
 	
