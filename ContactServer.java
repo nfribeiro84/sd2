@@ -68,7 +68,9 @@ public class ContactServer
 		String client_ip = "";
 		try {
 			client_ip = java.rmi.server.RemoteServer.getClientHost();
-		} catch (ServerNotActiveException e) {}
+		} catch (ServerNotActiveException e) {
+			System.out.println("Error subscribing:" + e.getMessage());
+		}
 
 		if (serverExists(name, client_ip))
 			throw new ServerExistsException("Server " + name + "@" + client_ip + " exists");
