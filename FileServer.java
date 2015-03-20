@@ -42,15 +42,14 @@ public class FileServer
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
-			return "Error subscribing to Contact Server. Error: " + e.getMessage() + ":" + this.contactServerURL;
+			return "Error subscribing to Contact Server. Error: " + e.getMessage();
 		}		
 	}
 	
 	/**
 	 * Metodo que serve para indicar que ainda esta vivo
 	 * @return "OK"
-	 */
+	 */	
 	public String pong()
 	{
 		return "OK";
@@ -59,6 +58,13 @@ public class FileServer
 	@Override
 	public String[] dir(String path) throws RemoteException, InfoNotFoundException 
 	{
+		try
+		{
+			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
+			System.out.println("Pedido 'DIR' do cliente " + client_ip);
+		}
+		catch(ServerNotActiveException e){};
+		
 		File f = new File( basePath, path);
 		if( f.exists())
 			return f.list();
@@ -111,8 +117,13 @@ public class FileServer
 	public static void main( String args[]) throws Exception {
 		try {
 			String path = ".";
-			if( args.length > 0)
-				path = args[0];
+			if( args.length != 3)
+			{
+				System.out.println("Usage: java FileServer path contactServerUrl fileServerName");
+				System.exit(0);
+			}
+			
+			path = args[0];
 
 			System.getProperties().put( "java.security.policy", "aula1/policy.all");
 
@@ -130,7 +141,12 @@ public class FileServer
 			FileServer server = new FileServer(path, args[1], args[2]);
 			Naming.rebind( args[2], server);
 			System.out.println( "DirServer bound in registry");
-			System.out.println(server.connectToContact());
+			
+			String connect = server.connectToContact();
+			System.out.println(connect);
+			if(!connect.equals("Successfully subscribed to Contact Server"))
+				System.exit(0);
+			
 		} catch( Throwable th) {
 			th.printStackTrace();
 		}

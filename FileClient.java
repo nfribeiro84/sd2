@@ -59,13 +59,15 @@ public class FileClient
 		System.err.println( "exec: ls " + dir + " no servidor " + server + " - e url : " + isURL);
 		if(isURL)
 		{
+			System.out.println("isUrl");
 			try
 			{
-				IFileServer servidor = (IFileServer) Naming.lookup("//" + server + "/myFileServer");
+				IFileServer servidor = (IFileServer) Naming.lookup(server);
 				return servidor.dir(dir);
 			}
 			catch(Exception e)
 			{
+				System.out.println(e.getMessage());
 				return null;
 			}
 		}
@@ -174,7 +176,7 @@ public class FileClient
 			{
 				String[] dirserver = cmd[1].split("@");
 				String server = dirserver.length == 1 ? null : dirserver[0];
-				boolean isURL = dirserver.length == 1 ? false : dirserver[1].indexOf('/') >= 0;
+				boolean isURL = dirserver.length == 1 ? false : dirserver[0].indexOf('/') >= 0;
 				String dir = dirserver.length == 1 ? dirserver[0] : dirserver[1];
 				
 				String[] res = dir( server, isURL, dir);
@@ -191,7 +193,7 @@ public class FileClient
 			{
 				String[] dirserver = cmd[1].split("@");
 				String server = dirserver.length == 1 ? null : dirserver[0];
-				boolean isURL = dirserver.length == 1 ? false : dirserver[1].indexOf('/') >= 0;
+				boolean isURL = dirserver.length == 1 ? false : dirserver[0].indexOf('/') >= 0;
 				String dir = dirserver.length == 1 ? dirserver[0] : dirserver[1];
 
 				boolean b = mkdir( server, isURL, dir);
