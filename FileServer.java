@@ -58,6 +58,7 @@ public class FileServer
 	@Override
 	public String[] dir(String path) throws RemoteException, InfoNotFoundException 
 	{
+		System.out.println("Pedido");
 		try
 		{
 			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
@@ -70,6 +71,20 @@ public class FileServer
 			return f.list();
 		else
 			throw new InfoNotFoundException( "Directory not found :" + path);
+	}
+	
+	@Override
+	public boolean mkdir(String dir) throws RemoteException
+	{
+		File directorio = new File(dir);
+		if(!directorio.exists())
+			try
+			{
+				return directorio.mkdir();
+			}
+			catch(SecurityException e){return false;};
+		
+		return false;
 	}
 
 	@Override

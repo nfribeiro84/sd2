@@ -3,6 +3,8 @@
 import java.io.*;
 import java.net.MalformedURLException;
 import java.rmi.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Classe base do cliente
@@ -19,6 +21,11 @@ public class FileClient
 		this.username = username;
 	}
 	
+	private String buildUrl(String urlIp, String serverName)
+	{
+		return "rmi://"+urlIp+"/"+serverName;
+	}
+	
 
 	/**
 	 * Devolve um array com os servidores a correr caso o name== null ou o URL dos
@@ -26,7 +33,7 @@ public class FileClient
 	 */
 	protected String[] servers(String name) 
 	{
-		System.err.println( "exec: servers");
+		//System.err.println( "exec: servers");
 		String[] result;
 		try 
 		{
@@ -56,26 +63,37 @@ public class FileClient
 	 */
 	protected String[] dir( String server, boolean isURL, String dir)
 	{
-		System.err.println( "exec: ls " + dir + " no servidor " + server + " - e url : " + isURL);
+		//System.err.println( "exec: ls " + dir + " no servidor " + server + " - e url : " + isURL);
 		if(isURL)
 		{
 			System.out.println("isUrl");
 			try
 			{
 				IFileServer servidor = (IFileServer) Naming.lookup(server);
+				
 				return servidor.dir(dir);
 			}
 			catch(Exception e)
 			{
-				System.out.println(e.getMessage());
+				System.out.println("Excepção no dir " + e.getMessage());
 				return null;
 			}
 		}
 		else
 		{
-			
+			System.out.println("Not url");
+			String[] servidores = this.servers(server);
+			for(String serverIP : servidores)
+			{
+				try
+				{
+					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
+					return serv.dir(dir);					
+				}
+				catch(Exception e){};				
+			}
+			return null;
 		}
-		return null;
 	}
 	
 	/**
@@ -87,9 +105,32 @@ public class FileClient
 	 * NOTA: nao deve lancar excepcao. 
 	 */
 	protected boolean mkdir( String server, boolean isURL, String dir) {
-		System.err.println( "exec: mkdir " + dir + " no servidor " + server +" - e url : " + isURL);
-		//TODO: completar
-		return false;
+		//System.err.println( "exec: mkdir " + dir + " no servidor " + server +" - e url : " + isURL);
+		if(isURL)
+			try
+			{
+				IFileServer servidor = (IFileServer) Naming.lookup(server);
+				return servidor.mkdir(dir);
+			}
+			catch(Exception e){ return false; }
+		else
+		{
+			String[] servidores = this.servers(server);
+			boolean result = false;
+			for(String serverIP : servidores)
+			{
+				try
+				{
+					//está a criar a directoria em todos os servidores com o nome dado
+					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
+					boolean resultado = serv.mkdir(dir);
+					if(resultado)
+						result = true;					
+				}
+				catch(Exception e){};				
+			}
+			return result;
+		}
 	}
 
 	/**
@@ -281,7 +322,7 @@ public class FileClient
 	
 	public static void main( String[] args) {
 		if( args.length != 2) {
-			System.out.println("Use: java trab1.FileClient URL nome_utilizador");
+			System.out.println("Use: java trab1.FileClient ContactServerURL nome_utilizador");
 			return;
 		}
 		try {
