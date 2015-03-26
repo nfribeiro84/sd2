@@ -75,7 +75,7 @@ public class FileClient
 			}
 			catch(Exception e)
 			{
-				System.out.println("Excepção no dir " + e.getMessage());
+				System.out.println("Excepcao no dir " + e.getMessage());
 				return null;
 			}
 		}
@@ -121,7 +121,7 @@ public class FileClient
 			{
 				try
 				{
-					//está a criar a directoria em todos os servidores com o nome dado
+					//esta a criar a directoria em todos os servidores com o nome dado
 					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
 					boolean resultado = serv.mkdir(dir);
 					if(resultado)
@@ -149,7 +149,7 @@ public class FileClient
 				IFileServer servidor = (IFileServer) Naming.lookup(server);
 				return servidor.rmdir(dir);
 			}
-			catch(Exception e){System.out.println("Excepção: "+e.getMessage()); return false; }
+			catch(Exception e){System.out.println("Excepcao: "+e.getMessage()); return false; }
 		else
 		{
 			String[] servidores = this.servers(server);
@@ -158,7 +158,7 @@ public class FileClient
 			{
 				try
 				{
-					//está a remover a directoria em todos os servidores com o nome dado
+					//esta a remover a directoria em todos os servidores com o nome dado
 					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
 					boolean resultado = serv.rmdir(dir);
 					if(resultado)
@@ -187,7 +187,7 @@ public class FileClient
 				IFileServer servidor = (IFileServer) Naming.lookup(server);
 				return servidor.rmfile(path);
 			}
-			catch(Exception e){System.out.println("Excepção: "+e.getMessage()); return false; }
+			catch(Exception e){System.out.println("Excepcao: "+e.getMessage()); return false; }
 		else
 		{
 			String[] servidores = this.servers(server);
@@ -196,7 +196,7 @@ public class FileClient
 			{
 				try
 				{
-					//está a remover a directoria em todos os servidores com o nome dado
+					//Esta a remover a directoria em todos os servidores com o nome dado
 					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
 					boolean resultado = serv.rmfile(path);
 					if(resultado)
@@ -225,7 +225,7 @@ public class FileClient
 				IFileServer servidor = (IFileServer) Naming.lookup(server);
 				return servidor.getFileInfo(path);
 			}
-			catch(Exception e){System.out.println("Excepção: "+e.getMessage()); return null; }
+			catch(Exception e){System.out.println("Excepcao: "+e.getMessage()); return null; }
 		else
 		{
 			String[] servidores = this.servers(server);
@@ -233,7 +233,7 @@ public class FileClient
 			{
 				try
 				{
-					//está a remover a directoria em todos os servidores com o nome dado
+					//Esta a remover a directoria em todos os servidores com o nome dado
 					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
 					return serv.getFileInfo(path);					
 				}
