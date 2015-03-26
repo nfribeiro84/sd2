@@ -13,9 +13,24 @@ public interface IFileServer extends Remote
 	public String[] dir( String path) throws RemoteException, InfoNotFoundException;
 	
 	/**
+	 * Cria um directorio no servidor
+	 */
+	public boolean mkdir(String dir) throws RemoteException;
+	
+	/**
+	 * Remove um directorio no servidor se este estiver vazio
+	 */
+	public boolean rmdir(String dir) throws RemoteException;
+	
+	/**
+	 * Remove um ficheiro no servidor
+	 */
+	public boolean rmfile(String path) throws RemoteException;
+	
+	/**
 	 * Devolve informacao sobre ficheiro.
 	 */
-	public FileInfo getFileInfo( String path, String name) throws RemoteException, InfoNotFoundException;
+	public FileInfo getFileInfo( String path) throws RemoteException, InfoNotFoundException;
 	
 	/**
 	 * Devolve informacao sobre ficheiro.

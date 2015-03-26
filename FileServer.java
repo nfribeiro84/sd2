@@ -49,6 +49,21 @@ public class FileServer
 	}
 	
 	/**
+	 * 
+	 */
+	private String checkClientHost()
+	{
+		try
+		{
+			return java.rmi.server.RemoteServer.getClientHost();
+		}
+		catch(ServerNotActiveException e)
+		{
+			return "unknown";
+		}
+	}
+	
+	/**
 	 * Metodo que serve para indicar que ainda esta vivo
 	 * @return "OK"
 	 */	
@@ -56,6 +71,8 @@ public class FileServer
 	{
 		return "OK";
 	}
+	
+	
 
 	@Override
 	public String[] dir(String path) throws RemoteException, InfoNotFoundException 
@@ -73,21 +90,78 @@ public class FileServer
 		else
 			throw new InfoNotFoundException( "Directory not found :" + path);
 	}
-
+	
 	@Override
-	public FileInfo getFileInfo(String path, String name) throws RemoteException, InfoNotFoundException {
-		File dir = new File( basePath, path);
-		if( dir.exists()) {
-			File f = new File( dir, name);
-			if( f.exists())
-				return new FileInfo( name, f.length(), new Date(f.lastModified()), f.isFile());
-			else
-				throw new InfoNotFoundException( "File not found :" + name);
-		} else
-			throw new InfoNotFoundException( "Directory not found :" + path);
+	public boolean mkdir(String dir) throws RemoteException
+	{
+		try
+		{
+			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
+			System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
+		}
+		catch(ServerNotActiveException e){};
+		File directorio = new File(basePath, dir);
+		if(!directorio.exists())
+			try
+			{
+				return directorio.mkdir();
+			}
+			catch(SecurityException e){return false;};
+		
+		return false;
+	}
+	
+	@Override
+	public boolean rmdir(String dir) throws RemoteException
+	{
+		try
+		{
+			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
+			System.out.println("Pedido 'Remove DIR' do cliente " + client_ip);
+		}
+		catch(ServerNotActiveException e){};
+		File directorio = new File(basePath, dir);
+		String[] children = directorio.list();
+		for(String child : children)
+			return false;
+		return directorio.delete();
+	}
+	
+	@Override
+	public boolean rmfile(String path) throws RemoteException
+	{
+		System.out.println("Pedido 'Remove File' do cliente " + checkClientHost());
+		File ficheiro = new File(basePath, path);
+		if(ficheiro.isFile())
+			return ficheiro.delete();
+		else return false;
 	}
 
-	public FileContent getFileContent(String path, String name) throws RemoteException, InfoNotFoundException, IOException {
+	@Override
+	public FileInfo getFileInfo(String path) throws RemoteException, InfoNotFoundException 
+	{
+		System.out.println("Pedido de 'File Info' do cliente " + checkClientHost());
+		File element = new File( basePath, path);
+		if( element.exists())
+			if(element.isFile())
+				return new FileInfo(element.getName(), element.length(), new Date(element.lastModified()), element.isFile(), 0, 0);
+			else
+			{
+				int directories = 0;
+				int files = 0;				
+				for(String child : element.list())
+					if(new File(element,child).isDirectory())
+						directories++;
+					else files++;
+				return new FileInfo(element.getName(), 0, new Date(element.lastModified()), element.isFile(), directories, files);
+			}
+				
+		else
+			throw new InfoNotFoundException( "Path not found :" + path);
+	}
+
+	public FileContent getFileContent(String path, String name) throws RemoteException, InfoNotFoundException, IOException 
+	{		
 		File dir = new File( basePath, path);
 		if( dir.exists()) {
 			File f = new File( dir, name);

@@ -3,6 +3,8 @@
 import java.io.*;
 import java.net.MalformedURLException;
 import java.rmi.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Classe base do cliente
@@ -19,6 +21,11 @@ public class FileClient
 		this.username = username;
 	}
 	
+	private String buildUrl(String urlIp, String serverName)
+	{
+		return "rmi://"+urlIp+"/"+serverName;
+	}
+	
 
 	/**
 	 * Devolve um array com os servidores a correr caso o name== null ou o URL dos
@@ -26,7 +33,7 @@ public class FileClient
 	 */
 	protected String[] servers(String name) 
 	{
-		System.err.println( "exec: servers");
+		//System.err.println( "exec: servers");
 		String[] result;
 		try 
 		{
@@ -56,26 +63,37 @@ public class FileClient
 	 */
 	protected String[] dir( String server, boolean isURL, String dir)
 	{
-		System.err.println( "exec: ls " + dir + " no servidor " + server + " - e url : " + isURL);
+		//System.err.println( "exec: ls " + dir + " no servidor " + server + " - e url : " + isURL);
 		if(isURL)
 		{
 			System.out.println("isUrl");
 			try
 			{
 				IFileServer servidor = (IFileServer) Naming.lookup(server);
+				
 				return servidor.dir(dir);
 			}
 			catch(Exception e)
 			{
-				System.out.println(e.getMessage());
+				System.out.println("Excepção no dir " + e.getMessage());
 				return null;
 			}
 		}
 		else
 		{
-			
+			System.out.println("Not url");
+			String[] servidores = this.servers(server);
+			for(String serverIP : servidores)
+			{
+				try
+				{
+					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
+					return serv.dir(dir);					
+				}
+				catch(Exception e){};				
+			}
+			return null;
 		}
-		return null;
 	}
 	
 	/**
@@ -87,9 +105,32 @@ public class FileClient
 	 * NOTA: nao deve lancar excepcao. 
 	 */
 	protected boolean mkdir( String server, boolean isURL, String dir) {
-		System.err.println( "exec: mkdir " + dir + " no servidor " + server +" - e url : " + isURL);
-		//TODO: completar
-		return false;
+		//System.err.println( "exec: mkdir " + dir + " no servidor " + server +" - e url : " + isURL);
+		if(isURL)
+			try
+			{
+				IFileServer servidor = (IFileServer) Naming.lookup(server);
+				return servidor.mkdir(dir);
+			}
+			catch(Exception e){ return false; }
+		else
+		{
+			String[] servidores = this.servers(server);
+			boolean result = false;
+			for(String serverIP : servidores)
+			{
+				try
+				{
+					//está a criar a directoria em todos os servidores com o nome dado
+					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
+					boolean resultado = serv.mkdir(dir);
+					if(resultado)
+						result = true;					
+				}
+				catch(Exception e){};				
+			}
+			return result;
+		}
 	}
 
 	/**
@@ -100,10 +141,33 @@ public class FileClient
 	 * Devolve false em caso de erro.
 	 * NOTA: nao deve lancar excepcao. 
 	 */
-	protected boolean rmdir( String server, boolean isURL, String dir) {
-		System.err.println( "exec: mkdir " + dir + " no servidor " + server + " - e url : " + isURL);
-		//TODO: completar
-		return false;
+	protected boolean rmdir( String server, boolean isURL, String dir) 
+	{
+		if(isURL)
+			try
+			{
+				IFileServer servidor = (IFileServer) Naming.lookup(server);
+				return servidor.rmdir(dir);
+			}
+			catch(Exception e){System.out.println("Excepção: "+e.getMessage()); return false; }
+		else
+		{
+			String[] servidores = this.servers(server);
+			boolean result = false;
+			for(String serverIP : servidores)
+			{
+				try
+				{
+					//está a remover a directoria em todos os servidores com o nome dado
+					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
+					boolean resultado = serv.rmdir(dir);
+					if(resultado)
+						result = true;					
+				}
+				catch(Exception e){};				
+			}
+			return result;
+		}
 	}
 
 	/**
@@ -114,10 +178,34 @@ public class FileClient
 	 * Devolve false em caso de erro.
 	 * NOTA: nao deve lancar excepcao. 
 	 */
-	protected boolean rm( String server, boolean isURL, String path) {
-		System.err.println( "exec: rm " + path + " no servidor " + server +" - e url : " + isURL);
-		//TODO: completar
-		return false;
+	protected boolean rm( String server, boolean isURL, String path) 
+	{
+		//System.err.println( "exec: rm " + path + " no servidor " + server +" - e url : " + isURL);
+		if(isURL)
+			try
+			{
+				IFileServer servidor = (IFileServer) Naming.lookup(server);
+				return servidor.rmfile(path);
+			}
+			catch(Exception e){System.out.println("Excepção: "+e.getMessage()); return false; }
+		else
+		{
+			String[] servidores = this.servers(server);
+			boolean result = false;
+			for(String serverIP : servidores)
+			{
+				try
+				{
+					//está a remover a directoria em todos os servidores com o nome dado
+					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
+					boolean resultado = serv.rmfile(path);
+					if(resultado)
+						result = true;					
+				}
+				catch(Exception e){};				
+			}
+			return result;
+		}
 	}
 
 	/**
@@ -128,10 +216,31 @@ public class FileClient
 	 * Devolve false em caso de erro.
 	 * NOTA: nao deve lancar excepcao. 
 	 */
-	protected FileInfo getAttr( String server, boolean isURL, String path) {
-		System.err.println( "exec: getattr " + path +  " no servidor " + server + " - e url : " + isURL);
-		//TODO: completar
-		return null;
+	protected FileInfo getAttr( String server, boolean isURL, String path) 
+	{
+		//System.err.println( "exec: getattr " + path +  " no servidor " + server + " - e url : " + isURL);
+		if(isURL)
+			try
+			{
+				IFileServer servidor = (IFileServer) Naming.lookup(server);
+				return servidor.getFileInfo(path);
+			}
+			catch(Exception e){System.out.println("Excepção: "+e.getMessage()); return null; }
+		else
+		{
+			String[] servidores = this.servers(server);
+			for(String serverIP : servidores)
+			{
+				try
+				{
+					//está a remover a directoria em todos os servidores com o nome dado
+					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
+					return serv.getFileInfo(path);					
+				}
+				catch(Exception e){};				
+			}
+			return null;
+		}
 	}
 
 	/**
@@ -206,7 +315,7 @@ public class FileClient
 			{
 				String[] dirserver = cmd[1].split("@");
 				String server = dirserver.length == 1 ? null : dirserver[0];
-				boolean isURL = dirserver.length == 1 ? false : dirserver[1].indexOf('/') >= 0;
+				boolean isURL = dirserver.length == 1 ? false : dirserver[0].indexOf('/') >= 0;
 				String dir = dirserver.length == 1 ? dirserver[0] : dirserver[1];
 
 				boolean b = rmdir( server, isURL, dir);
@@ -219,7 +328,7 @@ public class FileClient
 			{
 				String[] dirserver = cmd[1].split("@");
 				String server = dirserver.length == 1 ? null : dirserver[0];
-				boolean isURL = dirserver.length == 1 ? false : dirserver[1].indexOf('/') >= 0;
+				boolean isURL = dirserver.length == 1 ? false : dirserver[0].indexOf('/') >= 0;
 				String path = dirserver.length == 1 ? dirserver[0] : dirserver[1];
 
 				boolean b = rm( server, isURL, path);
@@ -232,7 +341,7 @@ public class FileClient
 			{
 				String[] dirserver = cmd[1].split("@");
 				String server = dirserver.length == 1 ? null : dirserver[0];
-				boolean isURL = dirserver.length == 1 ? false : dirserver[1].indexOf('/') >= 0;
+				boolean isURL = dirserver.length == 1 ? false : dirserver[0].indexOf('/') >= 0;
 				String path = dirserver.length == 1 ? dirserver[0] : dirserver[1];
 
 				FileInfo info = getAttr( server, isURL, path);
@@ -248,12 +357,12 @@ public class FileClient
 			{
 				String[] dirserver1 = cmd[1].split("@");
 				String server1 = dirserver1.length == 1 ? null : dirserver1[0];
-				boolean isURL1 = dirserver1.length == 1 ? false : dirserver1[1].indexOf('/') >= 0;
+				boolean isURL1 = dirserver1.length == 1 ? false : dirserver1[0].indexOf('/') >= 0;
 				String path1 = dirserver1.length == 1 ? dirserver1[0] : dirserver1[1];
 
 				String[] dirserver2 = cmd[2].split("@");
 				String server2 = dirserver2.length == 1 ? null : dirserver2[0];
-				boolean isURL2 = dirserver2.length == 1 ? false : dirserver2[1].indexOf('/') >= 0;
+				boolean isURL2 = dirserver2.length == 1 ? false : dirserver2[0].indexOf('/') >= 0;
 				String path2 = dirserver2.length == 1 ? dirserver2[0] : dirserver2[1];
 
 				boolean b = cp( server1, isURL1, path1, server2, isURL2, path2);
@@ -281,7 +390,7 @@ public class FileClient
 	
 	public static void main( String[] args) {
 		if( args.length != 2) {
-			System.out.println("Use: java trab1.FileClient URL nome_utilizador");
+			System.out.println("Use: java trab1.FileClient ContactServerURL nome_utilizador");
 			return;
 		}
 		try {

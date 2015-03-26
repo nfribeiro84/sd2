@@ -10,15 +10,23 @@ public class FileInfo implements java.io.Serializable
 	public long length;
 	public Date modified;
 	public boolean isFile;
+	public int childrenFiles;
+	public int childrenDirectories;
 	
-	public FileInfo( String name, long length, Date modified, boolean isFile) {
+	public FileInfo( String name, long length, Date modified, boolean isFile, int childrenDirectories, int childrenFiles) 
+	{
 		this.name = name;
 		this.length = length;
 		this.modified = modified;
 		this.isFile = isFile;
+		this.childrenFiles = childrenFiles;
+		this.childrenDirectories = childrenDirectories;
 	}
 	
-	public String toString() {
-		return "Name : " + name + "\nLength: " + length + "\nData modified: " + modified + "\nisFile : " + isFile; 
+	public String toString() 
+	{
+		if(this.isFile)
+			return "Name : " + name + "\nLength: " + length + "\nData modified: " + modified + "\nisFile : " + isFile;
+		return "Name : " + name + "\nData modified: " + modified + "\nisFile : " + isFile + "\nNumero de Directorios: "+childrenDirectories+"\nNumero de Ficheiros: "+childrenFiles;
 	}
 }
