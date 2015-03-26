@@ -5,10 +5,11 @@ import java.rmi.server.*;
 import java.rmi.registry.*;
 import java.util.*;
 import java.io.*;
+import java.lang.Thread;
 
 public class FileServer
 		extends UnicastRemoteObject
-		implements IFileServer
+		implements IFileServer, Runnable
 {
 	protected FileServer() throws RemoteException {
 		super();
@@ -21,6 +22,8 @@ public class FileServer
 	private File basePath;
 	private String contactServerURL;
 	private String fileServerName;
+
+	private int ping_interval = 3;
 	
 	protected FileServer( String pathname, String url, String name) throws RemoteException 
 	{
@@ -31,19 +34,18 @@ public class FileServer
 		this.fileServerName = name;
 	}
 	
-	private String connectToContact()
+	private IContactServer connectToContact() throws Exception
 	{
-		try
-		{
-			IContactServer contactServer = (IContactServer) Naming.lookup(this.contactServerURL);
-			if(contactServer.subscribe(this.fileServerName))
-				return "Successfully subscribed to Contact Server";
-			else return "Error subscribing to Contact Server. No Response";
-		}
-		catch(Exception e)
-		{
-			return "Error subscribing to Contact Server. Error: " + e.getMessage();
-		}		
+
+		IContactServer contactServer = (IContactServer) Naming.lookup(this.contactServerURL);
+		return contactServer;
+	}
+	
+	private IContactServer subscribeToContact(IContactServer contactServer) throws Exception
+	{
+		if(contactServer.subscribe(this.fileServerName))
+			return contactServer;
+		else throw new RemoteException("Couldn't conecto to contact server");
 	}
 	
 	/**
@@ -114,6 +116,28 @@ public class FileServer
     return (int) l;
 	}
 
+
+
+	@Override
+	public void run()	{
+		try {
+			for(;;) {
+
+				//System.out.println("run thread");
+			
+				try {
+					IContactServer contactServer = connectToContact();
+					contactServer.ping(this.fileServerName);
+				} catch(Exception e ) {
+					System.out.println(e.getMessage());
+				}
+				
+				//@TODO
+		  	Thread.sleep(2000);
+			}
+		} catch (InterruptedException e) {}
+	}
+
 	public static void main( String args[]) throws Exception {
 		try {
 			String path = ".";
@@ -142,10 +166,20 @@ public class FileServer
 			Naming.rebind( args[2], server);
 			System.out.println( "DirServer bound in registry");
 			
-			String connect = server.connectToContact();
-			System.out.println(connect);
-			if(!connect.equals("Successfully subscribed to Contact Server"))
+			try {
+
+				IContactServer contactserver = server.connectToContact();
+				server.subscribeToContact(contactserver);
+			}
+			catch(Exception ex)
+			{
+				System.out.println(ex.getMessage());
 				System.exit(0);
+			}
+
+
+			Thread thread = new Thread(server);
+ 			thread.start();
 			
 		} catch( Throwable th) {
 			th.printStackTrace();
