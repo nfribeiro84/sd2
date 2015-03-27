@@ -237,16 +237,35 @@ public class FileServer
 			}
 
 			FileServer server = new FileServer(path, args[1], args[2]);
-			Naming.rebind( args[2], server);
-			System.out.println( "DirServer bound in registry");
+			String name = args[2];
+			int i = 1;
+			boolean binded = false;
+			while(!binded)
+			{
+				try
+				{
+					Naming.bind( name, server);
+					binded = true;					
+					server.fileServerName = name;
+				}
+				catch(Exception e)
+				{
+					System.out.println("Name Exists");
+					name = name + "_" + i;
+				}
+			}
 			
-			try {
-
+			
+			System.out.println( "DirServer bound in registry with name '"+name+"'");
+			
+			try 
+			{
 				IContactServer contactserver = server.connectToContact();
 				server.subscribeToContact(contactserver);
 			}
 			catch(Exception ex)
 			{
+				System.out.println("excepção no connectToContact");
 				System.out.println(ex.getMessage());
 				System.exit(0);
 			}
