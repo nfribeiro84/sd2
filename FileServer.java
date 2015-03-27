@@ -136,6 +136,28 @@ public class FileServer
 			return ficheiro.delete();
 		else return false;
 	}
+	
+	@Override
+	public boolean cp(String source, String dest) throws RemoteException, IOException
+	{
+		System.out.println("Pedido 'Copy File' do cliente " + checkClientHost());
+
+		InputStream is = null;
+    OutputStream os = null;
+    try {
+        is = new FileInputStream(source);
+        os = new FileOutputStream(dest);
+        byte[] buffer = new byte[1024];
+        int length;
+        while ((length = is.read(buffer)) > 0) {
+            os.write(buffer, 0, length);
+        }
+    } finally {
+        is.close();
+        os.close();
+        return true;
+    }
+	}
 
 	@Override
 	public FileInfo getFileInfo(String path) throws RemoteException, InfoNotFoundException 
@@ -160,25 +182,43 @@ public class FileServer
 			throw new InfoNotFoundException( "Path not found :" + path);
 	}
 
-	public FileContent getFileContent(String path, String name) throws RemoteException, InfoNotFoundException, IOException 
+	public FileContent getFileContent(String path) throws RemoteException, InfoNotFoundException, IOException 
 	{		
-		File dir = new File( basePath, path);
-		if( dir.exists()) {
-			File f = new File( dir, name);
-			if( f.exists()) {
+		System.out.println("Pedido de 'File Content' do cliente " + checkClientHost());
+
+			File f = new File( basePath, path );
+
+			if( f.exists() && f.isFile() ) {
 
 				RandomAccessFile raf = new RandomAccessFile( f, "r" );
 				byte []b = new byte[safeLongToInt(raf.length())];
 				raf.readFully(b);
 				raf.close();
 
-				return new FileContent( name, f.length(), new Date(f.lastModified()), f.isFile(), b);
+				return new FileContent( path, f.length(), new Date(f.lastModified()), f.isFile(), b);
 			}
 			else
-				throw new InfoNotFoundException( "File not found :" + name);
+				throw new InfoNotFoundException( "File not found :" + path);
 
-		} else
-			throw new InfoNotFoundException( "Directory not found :" + path);
+
+	}
+
+	public boolean createFile(String path, FileContent file) throws RemoteException, InfoNotFoundException, IOException 
+	{		
+		System.out.println("Pedido de 'Create file' do cliente " + checkClientHost());
+
+    try {
+      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
+
+      raf.write(file.content);
+
+      raf.close();
+    } catch(Exception e) {
+    	System.out.println("erro:"+e.getMessage());
+    	throw new IOException(e.getMessage());
+    }
+    return true;
+
 
 	}
 
@@ -265,7 +305,6 @@ public class FileServer
 			}
 			catch(Exception ex)
 			{
-				System.out.println("excepção no connectToContact");
 				System.out.println(ex.getMessage());
 				System.exit(0);
 			}

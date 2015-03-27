@@ -252,10 +252,74 @@ public class FileClient
 	 */
 	protected boolean cp( String fromServer, boolean fromIsURL, String fromPath,
 							String toServer, boolean toIsURL, String toPath) {
-		System.err.println( "exec: cp " + fromPath + " no servidor " + fromServer + " - e url : " + fromIsURL + " para " +
-				toPath + " no servidor " + toServer +" - e url : " + toIsURL);
-		//TODO: completar
-		return false;
+		//System.err.println( "exec: cp " + fromPath + " no servidor " + fromServer + " - e url : " + fromIsURL + " para " +
+		//		toPath + " no servidor " + toServer +" - e url : " + toIsURL);
+		
+
+		FileContent content = null;
+
+		if(!fromIsURL) {
+			String[] servidores = this.servers(fromServer);
+			for(String serverIP : servidores)
+			{
+				try
+				{
+					//Esta a remover a directoria em todos os servidores com o nome dado
+					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, fromServer));				
+					content = serv.getFileContent(fromPath);					
+				}
+				catch(Exception e){};				
+			}
+		} else {			
+
+			try {
+
+				IFileServer server = (IFileServer) Naming.lookup(fromServer);
+
+				content = server.getFileContent(fromPath);
+
+			}catch(Exception e){
+				System.out.println(e.getMessage());
+				return false;
+			}
+		}
+
+		if(content == null) {
+
+			System.out.println("File not found!");	
+			return false;
+
+		}
+
+
+		boolean success = false;
+
+		if(!fromIsURL) {
+			String[] servidores = this.servers(fromServer);
+			for(String serverIP : servidores)
+			{
+				try
+				{
+					//Esta a remover a directoria em todos os servidores com o nome dado
+					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, fromServer));				
+					success = serv.createFile(toPath, content);					
+				}
+				catch(Exception e){};				
+			}
+		} else {			
+
+			try {
+
+				IFileServer server = (IFileServer) Naming.lookup(fromServer);
+				success = server.createFile(toPath, content);					
+
+			}catch(Exception e){
+				System.out.println(e.getMessage());
+				return false;
+			}
+		}
+
+		return success;
 	}
 
 	
