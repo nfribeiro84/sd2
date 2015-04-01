@@ -28,6 +28,11 @@ public interface IFileServer extends Remote
 	public boolean rmfile(String path) throws RemoteException;
 	
 	/**
+	 * Copia um ficheiro no servidor
+	 */
+	public boolean cp(String source, String dest) throws RemoteException, IOException;
+	
+	/**
 	 * Devolve informacao sobre ficheiro.
 	 */
 	public FileInfo getFileInfo( String path) throws RemoteException, InfoNotFoundException;
@@ -35,6 +40,10 @@ public interface IFileServer extends Remote
 	/**
 	 * Devolve informacao sobre ficheiro.
 	 */
-	public FileContent getFileContent( String path, String name) throws RemoteException, InfoNotFoundException, IOException;
+	public FileContent getFileContent( String path) throws RemoteException, InfoNotFoundException, IOException;
 
+	/**
+	*		Create a file in server
+	*/
+	public boolean createFile(String path, FileContent file) throws RemoteException, InfoNotFoundException, IOException;
 }
