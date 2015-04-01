@@ -251,7 +251,7 @@ public class FileServer
 				catch(Exception e)
 				{
 					System.out.println("Name Exists");
-					name = name + "_" + i;
+					name = args[2] + "_" + i;
 				}
 			}
 			
