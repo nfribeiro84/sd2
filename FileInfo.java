@@ -22,6 +22,16 @@ public class FileInfo implements java.io.Serializable
 		this.childrenFiles = childrenFiles;
 		this.childrenDirectories = childrenDirectories;
 	}
+
+	/**
+	*		WS contructor
+	*/
+	public FileInfo( String name, long length, Date modified, boolean isFile) {
+		this.name = name;
+		this.length = length;
+		this.modified = modified;
+		this.isFile = isFile;
+	}
 	
 	public String toString() 
 	{

@@ -86,13 +86,13 @@ public class ContactServer
 		try 
 		{
 			String ip = java.rmi.server.RemoteServer.getClientHost();
-			String servename = name + "@" + ip;
-			if(this.timetable.containsKey(servename)) 
+			String url = buildUrl(ip, name);
+			if(this.timetable.containsKey(url)) 
 			{
 				Date date = new Date();
-				this.timetable.put(servename, new Timestamp(date.getTime()));
+				this.timetable.put(url, new Timestamp(date.getTime()));
 			}
-			//System.out.println("server "+servename+" just pinged");
+			//System.out.println("server "+url+" just pinged");
 			return true;
 		} 
 		catch (ServerNotActiveException e) 
@@ -102,36 +102,46 @@ public class ContactServer
 		}
 	}
 
+	private String buildUrl(String urlIp, String serverName)
+  {
+    return "rmi://"+urlIp+"/"+serverName;
+  }
+
 	//@Override
 	private void addServer(String name, String ip) {
 		List<String> ips = new CopyOnWriteArrayList<String>();
+
+		String url = buildUrl(ip, name);
 
 		if(this.fileServers.containsKey(name))
 		{
 			ips = this.fileServers.get(name);
 
-			if(!ips.contains(ip))
+			if(!ips.contains(url))
 			{
-				ips.add(ip);
+				ips.add(url);
 
 				this.fileServers.put(name, ips);
 				System.out.println("Added server ip: " + ip + " to servename: " + name);
 			}
 		} else {
-			ips.add(ip);
+			ips.add(url);
 			this.fileServers.put(name, ips);
 			System.out.println("Added server ip: " + ip + " to servename: " + name);
 		}
 
 		Date date = new Date();
-		this.timetable.put(name + "@" + ip, new Timestamp(date.getTime()));
+		this.timetable.put(url, new Timestamp(date.getTime()));
 		System.out.println("Added timetable to server: " + name + "@" + ip + ": " + this.timetable.get(name + "@" + ip));
 
 	}
 
 	private boolean serverExists(String name, String ip) {
+
+		String url = buildUrl(ip, name);
+
 		if (this.fileServers.containsKey(name)) {
-			if (this.fileServers.get(name).contains(ip)) {
+			if (this.fileServers.get(name).contains(url)) {
 				return true;	
 			}
 		}
@@ -139,11 +149,11 @@ public class ContactServer
 	}
 
 	//@Override
-	private void removeServer(String name, String ip) {
-		
+	private void removeServer(String name, String url) {
+
 		List<String> ips = this.fileServers.get(name);
 		if(ips != null) {
-			ips.remove(ip);
+			ips.remove(url);
 			if (ips.size() == 0) {
 				//remove o ip do nome do servidor correpondente
 				this.fileServers.remove(name);
@@ -159,19 +169,19 @@ public class ContactServer
 		for (Map.Entry<String, List<String>> entry : fileServers.entrySet())
 		{
 			String name = entry.getKey();
-			for(String ip : entry.getValue()) 
+			for(String url : entry.getValue()) 
 			{
-				String servername = name +"@"+ip;
+				//String url = buildUrl(ip, name);
 				Date date = new Date();
 				Timestamp now = new Timestamp(date.getTime());	
-				Timestamp ping_date = this.timetable.get(servername);
+				Timestamp ping_date = this.timetable.get(url);
 				
 				if(date != null	) 
 				{
 					//System.out.println((now.getTime() - ping_date.getTime())/1000);	
 					if((now.getTime() - ping_date.getTime())/1000 > this.time_check)
 					{
-						removeServer(name, ip);
+						removeServer(name, url);
 					}
 				}
 			}
