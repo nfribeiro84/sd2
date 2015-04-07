@@ -10,8 +10,10 @@ import java.util.List;
 
 import javax.xml.namespace.QName;
 
-import aula3.clt.FileServerImplWS;
-import aula3.clt.FileServerImplWSService;
+//import aula3.clt.FileServerImplWS;
+//import aula3.clt.FileServerImplWSService;
+
+import ws.*;
 
 /**
  * Classe base do cliente
@@ -22,7 +24,7 @@ public class FileClient
 	String contactServerURL;
 	String username;
 	IFileServer rmiServer;
-	FileServerWS wsServer;
+	ws.FileServerWS wsServer;
 	
 	protected FileClient( String url, String username) 
 	{
@@ -33,7 +35,7 @@ public class FileClient
 	}
 	
 	/**
-	 * metodo que cria a ligação ao servidor de ficheiros
+	 * metodo que cria a ligacao ao servidor de ficheiros
 	 * Se o servidor de ficheiros for do tipo RMI cria o servidor rmiServer e coloca o de WebServices (wsServer) a null
 	 * Se o servidor de ficheiros for do tipo WS cria o servidor wsServer e coloca o de rmi (rmiServer) a null
 	 * @param fServer - nome do servidor. Pode ser do tipo Nome ou URL
@@ -53,7 +55,7 @@ public class FileClient
 			
 			if(url.startsWith("http"))
 			{
-				FileServerWSService service = new FileServerWSService( new URL(url), new QName("http://srv.aula3/", "FileServerWSService"));
+				FileServerWSService service = new FileServerWSService( new URL(url), new QName("http://soap.srv/", "FileServerWSService"));
 				this.wsServer = service.getFileServerWSPort();
 				this.rmiServer = null;
 			}
@@ -122,12 +124,12 @@ public class FileClient
 			
 			if(rmiServer == null)
 			{
-				//o servidor de ficheiro é do tipo WS
+				//o servidor de ficheiro e do tipo WS
 				return wsServer.dir(dir);
 			}
 			else
 			{
-				//o servidor de ficheiros é do tipo RMI
+				//o servidor de ficheiros e do tipo RMI
 				return rmiServer.dir(dir);
 			}
 		}

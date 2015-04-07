@@ -10,7 +10,7 @@ import java.rmi.*;
 import java.rmi.server.*;
 import java.rmi.registry.*;
 
-@WebService(targetNamespace="/")
+@WebService(targetNamespace="http://soap.srv/")
 public class FileServerWS implements Runnable
 {
 	private String basePathName;
