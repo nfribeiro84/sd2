@@ -22,6 +22,7 @@ public class FileServer
 	private File basePath;
 	private String contactServerURL;
 	private String fileServerName;
+	private String protocol;
 
 	private int ping_interval = 3;
 	
@@ -32,18 +33,18 @@ public class FileServer
 		basePath = new File( pathname);
 		this.contactServerURL = "rmi://" + url;
 		this.fileServerName = name;
+		this.protocol = "rmi";
 	}
 	
 	private IContactServer connectToContact() throws Exception
 	{
-
 		IContactServer contactServer = (IContactServer) Naming.lookup(this.contactServerURL);
 		return contactServer;
 	}
 	
 	private IContactServer subscribeToContact(IContactServer contactServer) throws Exception
 	{
-		if(contactServer.subscribe(this.fileServerName))
+		if(contactServer.subscribe(this.fileServerName, this.protocol))
 			return contactServer;
 		else throw new RemoteException("Couldn't conecto to contact server");
 	}
@@ -75,7 +76,7 @@ public class FileServer
 	
 
 	@Override
-	public String[] dir(String path) throws RemoteException, InfoNotFoundException 
+	public String[] dir(String path) throws RemoteException, InfoNotFoundException
 	{
 		try
 		{
@@ -241,7 +242,7 @@ public class FileServer
 			
 				try {
 					IContactServer contactServer = connectToContact();
-					contactServer.ping(this.fileServerName);
+					contactServer.ping(this.fileServerName, this.protocol);
 				} catch(Exception e ) {
 					System.out.println(e.getMessage());
 				}
@@ -257,7 +258,7 @@ public class FileServer
 			String path = ".";
 			if( args.length != 3)
 			{
-				System.out.println("Usage: java FileServer path contactServerUrl fileServerName");
+				System.out.println("Usage: java FileServer path contactServerUrl/contactServerName fileServerName");
 				System.exit(0);
 			}
 			

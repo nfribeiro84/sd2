@@ -66,7 +66,7 @@ public class ContactServer
 	}
 
 	//@Override
-	public boolean subscribe(String name) throws RemoteException, ServerExistsException{
+	public boolean subscribe(String name, String protocol) throws RemoteException, ServerExistsException{
 		String client_ip = "";
 		try {
 			client_ip = java.rmi.server.RemoteServer.getClientHost();
@@ -74,19 +74,19 @@ public class ContactServer
 			System.out.println("Error subscribing:" + e.getMessage());
 		}
 
-		if (serverExists(name, client_ip))
+		if (serverExists(name, client_ip, protocol))
 			throw new ServerExistsException("Server " + name + "@" + client_ip + " exists");
 
-		addServer(name, client_ip);
+		addServer(name, client_ip, protocol);
 		return true;
 	}
 
 
-	public boolean ping(String name) throws RemoteException {
+	public boolean ping(String name, String protocol) throws RemoteException {
 		try 
 		{
 			String ip = java.rmi.server.RemoteServer.getClientHost();
-			String url = buildUrl(ip, name);
+			String url = buildUrl(ip, name, protocol);
 			if(this.timetable.containsKey(url)) 
 			{
 				Date date = new Date();
@@ -102,16 +102,16 @@ public class ContactServer
 		}
 	}
 
-	private String buildUrl(String urlIp, String serverName)
+	private String buildUrl(String urlIp, String serverName, String protocol)
   {
-    return "rmi://"+urlIp+"/"+serverName;
+    return protocol+"://"+urlIp+"/"+serverName;
   }
 
 	//@Override
-	private void addServer(String name, String ip) {
+	private void addServer(String name, String ip, String protocol) {
 		List<String> ips = new CopyOnWriteArrayList<String>();
 
-		String url = buildUrl(ip, name);
+		String url = buildUrl(ip, name, protocol);
 
 		if(this.fileServers.containsKey(name))
 		{
@@ -136,9 +136,9 @@ public class ContactServer
 
 	}
 
-	private boolean serverExists(String name, String ip) {
+	private boolean serverExists(String name, String ip, String protocol) {
 
-		String url = buildUrl(ip, name);
+		String url = buildUrl(ip, name, protocol);
 
 		if (this.fileServers.containsKey(name)) {
 			if (this.fileServers.get(name).contains(url)) {
@@ -235,9 +235,9 @@ public class ContactServer
 
 
 			//add server
-			server.addServer("CAE", "100.100.1.1");
+			server.addServer("CAE", "100.100.1.1", "rmi");
 
-			server.addServer("CAE__", "100.100.1.2");
+			server.addServer("CAE__", "100.100.1.2", "rmi");
 
 			List<String> list = new ArrayList<String>();
 			list.add("10.100.1.1");
