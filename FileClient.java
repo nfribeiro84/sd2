@@ -2,9 +2,16 @@
 
 import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.rmi.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+
+import javax.xml.namespace.QName;
+
+import aula3.clt.FileServerImplWS;
+import aula3.clt.FileServerImplWSService;
 
 /**
  * Classe base do cliente
@@ -14,11 +21,53 @@ public class FileClient
 {
 	String contactServerURL;
 	String username;
+	IFileServer rmiServer;
+	FileServerWS wsServer;
 	
 	protected FileClient( String url, String username) 
 	{
 		this.contactServerURL = url;
 		this.username = username;
+		this.rmiServer = null;
+		this.wsServer = null;
+	}
+	
+	/**
+	 * metodo que cria a ligação ao servidor de ficheiros
+	 * Se o servidor de ficheiros for do tipo RMI cria o servidor rmiServer e coloca o de WebServices (wsServer) a null
+	 * Se o servidor de ficheiros for do tipo WS cria o servidor wsServer e coloca o de rmi (rmiServer) a null
+	 * @param fServer - nome do servidor. Pode ser do tipo Nome ou URL
+	 * @param isUrl - boolean que indica se o servidor e do tipo Nome ou URL
+	 */
+	private boolean generateFileServer(String fServer, boolean isUrl)
+	{
+		try
+		{
+			String url = fServer;
+			boolean isRMI = false;
+			if(!isUrl)
+			{
+				String[] servidores = this.servers(fServer);
+				url = servidores[0];
+			}
+			
+			if(url.startsWith("http"))
+			{
+				FileServerWSService service = new FileServerWSService( new URL(url), new QName("http://srv.aula3/", "FileServerWSService"));
+				this.wsServer = service.getFileServerWSPort();
+				this.rmiServer = null;
+			}
+			else
+			{
+				this.wsServer = null;
+				this.rmiServer = (IFileServer) Naming.lookup(url);
+			}
+		}
+		catch(Exception e)
+		{
+			return false;
+		}
+		return true;
 	}
 	
 	private String buildUrl(String urlIp, String serverName)
@@ -63,35 +112,28 @@ public class FileClient
 	 */
 	protected String[] dir( String server, boolean isURL, String dir)
 	{
-		//System.err.println( "exec: ls " + dir + " no servidor " + server + " - e url : " + isURL);
-		if(isURL)
+		try
 		{
-			System.out.println("isUrl");
-			try
+			if(!generateFileServer(server,isURL))
 			{
-				IFileServer servidor = (IFileServer) Naming.lookup(server);
-				
-				return servidor.dir(dir);
-			}
-			catch(Exception e)
-			{
-				System.out.println("Excepcao no dir " + e.getMessage());
+				System.out.println("DIR ERROR - Cannot connect to File Server '"+server+"'");
 				return null;
 			}
-		}
-		else
-		{
-			System.out.println("Not url");
-			String[] servidores = this.servers(server);
-			for(String serverIP : servidores)
+			
+			if(rmiServer == null)
 			{
-				try
-				{
-					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
-					return serv.dir(dir);					
-				}
-				catch(Exception e){};				
+				//o servidor de ficheiro é do tipo WS
+				return wsServer.dir(dir);
 			}
+			else
+			{
+				//o servidor de ficheiros é do tipo RMI
+				return rmiServer.dir(dir);
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println("Exception on 'dir': " + e.getMessage());
 			return null;
 		}
 	}
@@ -104,33 +146,26 @@ public class FileClient
 	 * Devolve false em caso de erro.
 	 * NOTA: nao deve lancar excepcao. 
 	 */
-	protected boolean mkdir( String server, boolean isURL, String dir) {
-		//System.err.println( "exec: mkdir " + dir + " no servidor " + server +" - e url : " + isURL);
-		if(isURL)
-			try
-			{
-				IFileServer servidor = (IFileServer) Naming.lookup(server);
-				return servidor.mkdir(dir);
-			}
-			catch(Exception e){ return false; }
-		else
+	protected boolean mkdir( String server, boolean isURL, String dir) 
+	{
+		try
 		{
-			String[] servidores = this.servers(server);
-			boolean result = false;
-			for(String serverIP : servidores)
+			if(!generateFileServer(server,isURL))
 			{
-				try
-				{
-					//esta a criar a directoria em todos os servidores com o nome dado
-					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
-					boolean resultado = serv.mkdir(dir);
-					if(resultado)
-						result = true;					
-				}
-				catch(Exception e){};				
+				System.out.println("MKDIR ERROR - Cannot connect to File Server '"+server+"'");
+				return false;
 			}
-			return result;
+			
+			if(rmiServer == null)
+				wsServer.mkdir(dir);			
+			else
+				return rmiServer.mkdir(dir);			
 		}
+		catch(Exception e)
+		{
+			System.out.println("Exception in 'mkdir': "+ e.getMessage());
+			return false;
+		}		
 	}
 
 	/**
@@ -143,30 +178,24 @@ public class FileClient
 	 */
 	protected boolean rmdir( String server, boolean isURL, String dir) 
 	{
-		if(isURL)
-			try
-			{
-				IFileServer servidor = (IFileServer) Naming.lookup(server);
-				return servidor.rmdir(dir);
-			}
-			catch(Exception e){System.out.println("Excepcao: "+e.getMessage()); return false; }
-		else
+		try
 		{
-			String[] servidores = this.servers(server);
-			boolean result = false;
-			for(String serverIP : servidores)
+			if(!generateFileServer(server,isURL))
 			{
-				try
-				{
-					//esta a remover a directoria em todos os servidores com o nome dado
-					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
-					boolean resultado = serv.rmdir(dir);
-					if(resultado)
-						result = true;					
-				}
-				catch(Exception e){};				
+				System.out.println("RMDIR ERROR - Cannot connect to FileServer '"+server+"'");
+				return false;
 			}
-			return result;
+			
+			if(rmiServer == null)
+				return wsServer.rmdir(dir);
+			else
+				return rmiServer.rmdir(dir);
+			
+		}
+		catch(Exception e)
+		{
+			System.out.println("Exception in 'RMDIR': "+e.getMessage());
+			return false;
 		}
 	}
 
@@ -180,31 +209,23 @@ public class FileClient
 	 */
 	protected boolean rm( String server, boolean isURL, String path) 
 	{
-		//System.err.println( "exec: rm " + path + " no servidor " + server +" - e url : " + isURL);
-		if(isURL)
-			try
-			{
-				IFileServer servidor = (IFileServer) Naming.lookup(server);
-				return servidor.rmfile(path);
-			}
-			catch(Exception e){System.out.println("Excepcao: "+e.getMessage()); return false; }
-		else
+		try
 		{
-			String[] servidores = this.servers(server);
-			boolean result = false;
-			for(String serverIP : servidores)
+			if(!generateFileServer(server,isURL))
 			{
-				try
-				{
-					//Esta a remover a directoria em todos os servidores com o nome dado
-					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
-					boolean resultado = serv.rmfile(path);
-					if(resultado)
-						result = true;					
-				}
-				catch(Exception e){};				
+				System.out.println("RM ERROR - Cannot connect to FileServer '"+server+"'");
+				return false;
 			}
-			return result;
+			
+			if(rmiServer == null)
+				return wsServer.rmfile(path);
+			else
+				return rmiServer.rmfile(path);			
+		}
+		catch(Exception e)
+		{
+			System.out.println("Exception in 'RM': "+e.getMessage());
+			return false;
 		}
 	}
 
@@ -218,27 +239,23 @@ public class FileClient
 	 */
 	protected FileInfo getAttr( String server, boolean isURL, String path) 
 	{
-		//System.err.println( "exec: getattr " + path +  " no servidor " + server + " - e url : " + isURL);
-		if(isURL)
-			try
-			{
-				IFileServer servidor = (IFileServer) Naming.lookup(server);
-				return servidor.getFileInfo(path);
-			}
-			catch(Exception e){System.out.println("Excepcao: "+e.getMessage()); return null; }
-		else
+		try
 		{
-			String[] servidores = this.servers(server);
-			for(String serverIP : servidores)
+			if(!generateFileServer(server,isURL))
 			{
-				try
-				{
-					//Esta a remover a directoria em todos os servidores com o nome dado
-					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, server));				
-					return serv.getFileInfo(path);					
-				}
-				catch(Exception e){};				
+				System.out.println("GETATTR ERROR - Cannot connect to FileServer '"+server+"'");
+				return null;
 			}
+			
+			if(rmiServer == null)
+				return wsServer.getFileInfo(path);
+			else
+				return rmiServer.getFileInfo(path);
+			
+		}
+		catch(Exception e)
+		{
+			System.out.println("Exception in 'GETATTR': "+e.getMessage());
 			return null;
 		}
 	}
@@ -251,75 +268,102 @@ public class FileClient
 	 * NOTA: nao deve lancar excepcao. 
 	 */
 	protected boolean cp( String fromServer, boolean fromIsURL, String fromPath,
-							String toServer, boolean toIsURL, String toPath) {
-		//System.err.println( "exec: cp " + fromPath + " no servidor " + fromServer + " - e url : " + fromIsURL + " para " +
-		//		toPath + " no servidor " + toServer +" - e url : " + toIsURL);
-		
-
+							String toServer, boolean toIsURL, String toPath) 
+	{
 		FileContent content = null;
+		
+		if(fromServer == null)
+		{
+			//o ficheiro esta na directoria do cliente
+			File f = new File( fromPath );
 
-		if(!fromIsURL) {
-			String[] servidores = this.servers(fromServer);
-			for(String serverIP : servidores)
+			if( f.exists() && f.isFile() ) 
 			{
 				try
 				{
-					//Esta a remover a directoria em todos os servidores com o nome dado
-					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, fromServer));				
-					content = serv.getFileContent(fromPath);					
+					RandomAccessFile raf = new RandomAccessFile( f, "r" );
+					byte []b = new byte[FileServer.safeLongToInt(raf.length())];
+					raf.readFully(b);
+					raf.close();
+
+					content =  new FileContent( fromPath, f.length(), new Date(f.lastModified()), f.isFile(), b);
 				}
-				catch(Exception e){};				
+				catch(Exception e)
+				{
+					System.out.println("Exception in 'CP' while acessing the file: " + e.getMessage());
+					return false;
+				}
 			}
-		} else {			
-
-			try {
-
-				IFileServer server = (IFileServer) Naming.lookup(fromServer);
-
-				content = server.getFileContent(fromPath);
-
-			}catch(Exception e){
-				System.out.println(e.getMessage());
+			else
 				return false;
-			}
 		}
-
-		if(content == null) {
-
+		else
+		{
+			//o ficheiro esta na directoria de um servidor
+			try
+			{
+				if(!generateFileServer(fromServer, fromIsURL))
+				{
+					System.out.println("CP ERROR - Cannot connecto to From File Server '"+fromServer+"'");
+					return false;
+				}
+				if(rmiServer == null)
+					content = wsServer.getFileContent(fromPath);
+				else
+					content = rmiServer.getFileContent(fromPath);
+			}
+			catch(Exception e)
+			{
+				System.out.println("Exception in 'CP fromServer': "+e.getMessage());
+				return false;
+			}			
+		}
+		
+		if(content == null) 
+		{
 			System.out.println("File not found!");	
 			return false;
-
 		}
 
 
 		boolean success = false;
 
-		if(!fromIsURL) {
-			String[] servidores = this.servers(fromServer);
-			for(String serverIP : servidores)
+		//copiar o ficheiro para a maquina do cliente
+		if(toServer == null)
+		{
+			try 
 			{
-				try
-				{
-					//Esta a remover a directoria em todos os servidores com o nome dado
-					IFileServer serv = (IFileServer) Naming.lookup(buildUrl(serverIP, fromServer));				
-					success = serv.createFile(toPath, content);					
-				}
-				catch(Exception e){};				
+			      RandomAccessFile raf = new RandomAccessFile(toPath, "rw");
+			      raf.write(content.content);
+			      raf.close();
+			      return true;
 			}
-		} else {			
-
-			try {
-
-				IFileServer server = (IFileServer) Naming.lookup(fromServer);
-				success = server.createFile(toPath, content);					
-
-			}catch(Exception e){
-				System.out.println(e.getMessage());
+			catch(Exception e) 
+			{
+				System.out.println("Exception in 'CP toServer':"+e.getMessage());
+			    return false;
+			}
+		}
+		else
+		{//copiar para um servidor
+			try
+			{
+				if(!generateFileServer(toServer, toIsURL))
+				{
+					System.out.println("CP ERROR - Cannot connecto to To File Server '"+toServer+"'");
+					return false;
+				}
+				if(rmiServer == null)
+					return wsServer.createFile(toPath, content);
+				else
+					return rmiServer.createFile(toPath, content);
+			}
+			catch(Exception e)
+			{
+				System.out.println("Exception in 'CP toServer': "+e.getMessage());
 				return false;
 			}
 		}
-
-		return success;
 	}
 
 	
