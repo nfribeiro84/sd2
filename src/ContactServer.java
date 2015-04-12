@@ -103,7 +103,9 @@ public class ContactServer
 
 	private String buildUrl(String urlIp, String serverName, String protocol)
   {
-    return protocol+"://"+urlIp+"/"+serverName;
+  	String port = protocol.startsWith("http") ? ":8080" : "";
+  	String wsdl = protocol.startsWith("http") ? "?wsdl" : "";
+    return protocol+"://"+urlIp+port+"/"+serverName+wsdl;
   }
 
 	//@Override
@@ -111,6 +113,7 @@ public class ContactServer
 		List<String> ips = new CopyOnWriteArrayList<String>();
 
 		String url = buildUrl(ip, name, protocol);
+		System.out.println(url);
 
 		if(this.fileServers.containsKey(name))
 		{
@@ -214,7 +217,7 @@ public class ContactServer
 	public static void main( String args[]) throws Exception {
 		try {
 
-			System.getProperties().put( "java.security.policy", "aula1/policy.all");
+			System.getProperties().put( "java.security.policy", "policy.all");
 
 			if( System.getSecurityManager() == null) {
 				System.setSecurityManager( new RMISecurityManager());
@@ -234,12 +237,10 @@ public class ContactServer
 
 
 			//add server
-			server.addServer("CAE", "100.100.1.1", "rmi");
+//			server.addServer("CAE", "100.100.1.1", "rmi");
 
-			server.addServer("CAE__", "100.100.1.2", "rmi");
+//			server.addServer("CAE__", "100.100.1.2", "rmi");
 
-			List<String> list = new ArrayList<String>();
-			list.add("10.100.1.1");
 
 
 			Thread thread = new Thread(server);

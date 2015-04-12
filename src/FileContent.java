@@ -1,4 +1,5 @@
 import java.util.*;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 public class FileContent implements java.io.Serializable
 {
@@ -18,6 +19,15 @@ public class FileContent implements java.io.Serializable
 		this.content = content;
 	}
 	
+
+	public static Date toDate(XMLGregorianCalendar calendar){
+	 if(calendar == null) {
+     return null;
+	 }
+	 return calendar.toGregorianCalendar().getTime();
+	}
+
+
 	public String toString() {
 		return "Name : " + name + "\nLength: " + length + "\nData modified: " + modified + "\nisFile : " + isFile + "\nContent : " + content; 
 	}

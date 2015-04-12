@@ -8,10 +8,12 @@ import java.util.Date;
 import java.util.List;
 
 import javax.xml.namespace.QName;
+import ws.FileServerWSService;
 
 //import aula3.clt.FileServerImplWS;
 //import aula3.clt.FileServerImplWSService;
 
+import javax.xml.datatype.XMLGregorianCalendar;
 
 /**
  * Classe base do cliente
@@ -22,7 +24,7 @@ public class FileClient
 	String contactServerURL;
 	String username;
 	IFileServer rmiServer;
-	FileServerWS wsServer;
+	ws.FileServerWS wsServer;
 	
 	protected FileClient( String url, String username) 
 	{
@@ -53,7 +55,7 @@ public class FileClient
 			
 			if(url.startsWith("http"))
 			{
-				FileServerWSService service = new FileServerWSService( new URL(url), new QName("http://soap.srv/", "FileServerWSService"));
+				FileServerWSService service = new FileServerWSService( new URL(url), new QName("http://ws.srv/", "FileServerWSService"));
 				this.wsServer = service.getFileServerWSPort();
 				this.rmiServer = null;
 			}
@@ -65,6 +67,7 @@ public class FileClient
 		}
 		catch(Exception e)
 		{
+			System.out.println(e.getMessage());
 			return false;
 		}
 		return true;
@@ -123,7 +126,8 @@ public class FileClient
 			if(rmiServer == null)
 			{
 				//o servidor de ficheiro e do tipo WS
-				return wsServer.dir(dir);
+				List<String> res = wsServer.dir(dir);
+				return res.toArray( new String[res.size()]);
 			}
 			else
 			{
@@ -157,7 +161,7 @@ public class FileClient
 			}
 			
 			if(rmiServer == null)
-				wsServer.mkdir(dir);			
+				return wsServer.mkdir(dir);			
 			else
 				return rmiServer.mkdir(dir);			
 		}
@@ -247,8 +251,11 @@ public class FileClient
 				return null;
 			}
 			
-			if(rmiServer == null)
-				return new FileInfo(wsServer.getFileInfo(path));
+			if(rmiServer == null) {
+				ws.FileInfo info = wsServer.getFileInfo(path);
+
+				return new FileInfo( info.getName(), info.getLength(), toDate( info.getModified()), info.isIsFile(), info.getChildrenDirectories(), info.getChildrenFiles() );
+			}
 			else
 				return rmiServer.getFileInfo(path);
 			
@@ -270,7 +277,8 @@ public class FileClient
 	protected boolean cp( String fromServer, boolean fromIsURL, String fromPath,
 							String toServer, boolean toIsURL, String toPath) 
 	{
-		rmi.FileContent content = null;
+		FileContent content = null;
+		ws.FileContent contentWs = null;
 		
 		if(fromServer == null)
 		{
@@ -286,7 +294,7 @@ public class FileClient
 					raf.readFully(b);
 					raf.close();
 
-					content =  new rmi.FileContent( fromPath, f.length(), new Date(f.lastModified()), f.isFile(), b);
+					content =  new FileContent( fromPath, f.length(), new Date(f.lastModified()), f.isFile(), b);
 				}
 				catch(Exception e)
 				{
@@ -308,7 +316,7 @@ public class FileClient
 					return false;
 				}
 				if(rmiServer == null)
-					content = (rmi.FileContent) wsServer.getFileContent(fromPath);
+					contentWs = wsServer.getFileContent(fromPath);
 				else
 					content = rmiServer.getFileContent(fromPath);
 			}
@@ -354,7 +362,7 @@ public class FileClient
 					return false;
 				}
 				if(rmiServer == null)
-					return wsServer.createFile(toPath, content);
+					return wsServer.createFile(toPath, contentWs);
 				else
 					return rmiServer.createFile(toPath, content);
 			}
@@ -366,6 +374,13 @@ public class FileClient
 		}
 	}
 
+
+	public static Date toDate(XMLGregorianCalendar calendar){
+	 if(calendar == null) {
+     return null;
+	 }
+	 return calendar.toGregorianCalendar().getTime();
+	}
 	
 	protected void doit() throws IOException {
 		BufferedReader reader = new BufferedReader( new InputStreamReader( System.in));		

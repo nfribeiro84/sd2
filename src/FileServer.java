@@ -1,17 +1,22 @@
 
-import java.io.*;
-import java.util.Date;
-
-import javax.jws.*;
-import javax.xml.ws.Endpoint;
-
 import java.rmi.*;
 import java.rmi.server.*;
 import java.rmi.registry.*;
+import java.util.*;
+import java.io.*;
+import java.lang.Thread;
 
-@WebService(targetNamespace="http://soap.srv/")
-public class FileServerWS implements Runnable
+public class FileServer
+		extends UnicastRemoteObject
+		implements IFileServer, Runnable
 {
+	protected FileServer() throws RemoteException {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+	private static final long serialVersionUID = 1L;
+
 	private String basePathName;
 	private File basePath;
 	private String contactServerURL;
@@ -19,24 +24,15 @@ public class FileServerWS implements Runnable
 	private String protocol;
 
 	private int ping_interval = 3;
-
-	public FileServerWS() {
-		basePath = new File(".");
-	}
-
-	protected FileServerWS( String pathname) {
-		super();
-		basePath = new File( pathname);
-	}
-
-	protected FileServerWS( String pathname, String url, String name)
+	
+	protected FileServer( String pathname, String url, String name) throws RemoteException 
 	{
 		super();
 		this.basePathName = pathname;
 		basePath = new File( pathname);
 		this.contactServerURL = "rmi://" + url;
 		this.fileServerName = name;
-		this.protocol = "http";
+		this.protocol = "rmi";
 	}
 	
 	private IContactServer connectToContact() throws Exception
@@ -49,10 +45,8 @@ public class FileServerWS implements Runnable
 	{
 		if(contactServer.subscribe(this.fileServerName, this.protocol))
 			return contactServer;
-		else throw new Exception("Couldn't conecto to contact server");
+		else throw new RemoteException("Couldn't conecto to contact server");
 	}
-
-
 	
 	/**
 	 * 
@@ -61,32 +55,51 @@ public class FileServerWS implements Runnable
 	{
 		try
 		{
-    	return java.rmi.server.RemoteServer.getClientHost();
+			return java.rmi.server.RemoteServer.getClientHost();
 		}
 		catch(ServerNotActiveException e)
 		{
 			return "unknown";
 		}
 	}
-
-	@WebMethod
-	public String[] dir(String path) throws InfoNotFoundException
+	
+	/**
+	 * Metodo que serve para indicar que ainda esta vivo
+	 * @return "OK"
+	 */	
+	public String pong()
 	{
+		return "OK";
+	}
+	
+	
+
+	@Override
+	public String[] dir(String path) throws RemoteException, InfoNotFoundException
+	{
+		try
+		{
+			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
+			System.out.println("Pedido 'DIR' do cliente " + client_ip);
+		}
+		catch(ServerNotActiveException e){};
+		
 		File f = new File( basePath, path);
 		if( f.exists())
 			return f.list();
 		else
 			throw new InfoNotFoundException( "Directory not found :" + path);
 	}
-
-
 	
-	@WebMethod
-	public boolean mkdir(String dir) 
+	@Override
+	public boolean mkdir(String dir) throws RemoteException
 	{
-		String client_ip = checkClientHost();	
-		System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
-
+		try
+		{
+			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
+			System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
+		}
+		catch(ServerNotActiveException e){};
 		File directorio = new File(basePath, dir);
 		if(!directorio.exists())
 			try
@@ -97,14 +110,16 @@ public class FileServerWS implements Runnable
 		
 		return false;
 	}
-
 	
-	@WebMethod
-	public boolean rmdir(String dir)
+	@Override
+	public boolean rmdir(String dir) throws RemoteException
 	{
-		String client_ip = checkClientHost();	
-		System.out.println("Pedido 'Remove DIR' do cliente " + client_ip);
-		
+		try
+		{
+			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
+			System.out.println("Pedido 'Remove DIR' do cliente " + client_ip);
+		}
+		catch(ServerNotActiveException e){};
 		File directorio = new File(basePath, dir);
 		String[] children = directorio.list();
 		for(String child : children)
@@ -112,9 +127,8 @@ public class FileServerWS implements Runnable
 		return directorio.delete();
 	}
 	
-	
-	@WebMethod
-	public boolean rmfile(String path)
+	@Override
+	public boolean rmfile(String path) throws RemoteException
 	{
 		System.out.println("Pedido 'Remove File' do cliente " + checkClientHost());
 		File ficheiro = new File(basePath, path);
@@ -122,10 +136,9 @@ public class FileServerWS implements Runnable
 			return ficheiro.delete();
 		else return false;
 	}
-
 	
-	@WebMethod
-	public boolean cp(String source, String dest) throws IOException
+	@Override
+	public boolean cp(String source, String dest) throws RemoteException, IOException
 	{
 		System.out.println("Pedido 'Copy File' do cliente " + checkClientHost());
 
@@ -146,9 +159,8 @@ public class FileServerWS implements Runnable
     }
 	}
 
-
-	@WebMethod
-	public FileInfo getFileInfo(String path) throws InfoNotFoundException 
+	@Override
+	public FileInfo getFileInfo(String path) throws RemoteException, InfoNotFoundException 
 	{
 		System.out.println("Pedido de 'File Info' do cliente " + checkClientHost());
 		File element = new File( basePath, path);
@@ -170,28 +182,28 @@ public class FileServerWS implements Runnable
 			throw new InfoNotFoundException( "Path not found :" + path);
 	}
 
-
-	public FileContent getFileContent(String path) throws InfoNotFoundException, IOException 
+	public FileContent getFileContent(String path) throws RemoteException, InfoNotFoundException, IOException 
 	{		
 		System.out.println("Pedido de 'File Content' do cliente " + checkClientHost());
 
-		File f = new File( basePath, path );
+			File f = new File( basePath, path );
 
-		if( f.exists() && f.isFile() ) {
+			if( f.exists() && f.isFile() ) {
 
-			RandomAccessFile raf = new RandomAccessFile( f, "r" );
-			byte []b = new byte[safeLongToInt(raf.length())];
-			raf.readFully(b);
-			raf.close();
+				RandomAccessFile raf = new RandomAccessFile( f, "r" );
+				byte []b = new byte[safeLongToInt(raf.length())];
+				raf.readFully(b);
+				raf.close();
 
-			return new FileContent( path, f.length(), new Date(f.lastModified()), f.isFile(), b);
-		}
-		else
-			throw new InfoNotFoundException( "File not found :" + path);
+				return new FileContent( path, f.length(), new Date(f.lastModified()), f.isFile(), b);
+			}
+			else
+				throw new InfoNotFoundException( "File not found :" + path);
+
+
 	}
 
-
-	public boolean createFile(String path, FileContent file) throws InfoNotFoundException, IOException 
+	public boolean createFile(String path, FileContent file) throws RemoteException, InfoNotFoundException, IOException 
 	{		
 		System.out.println("Pedido de 'Create file' do cliente " + checkClientHost());
 
@@ -206,6 +218,8 @@ public class FileServerWS implements Runnable
     	throw new IOException(e.getMessage());
     }
     return true;
+
+
 	}
 
 	public static int safeLongToInt(long l) {
@@ -215,6 +229,7 @@ public class FileServerWS implements Runnable
     }
     return (int) l;
 	}
+
 
 
 	@Override
@@ -237,12 +252,9 @@ public class FileServerWS implements Runnable
 		} catch (InterruptedException e) {}
 	}
 
-	public static void main( String args[]) {
-
+	public static void main( String args[]) throws Exception {
 		try {
 			String path = ".";
-			String url = "";
-			String serverName = "";
 			if( args.length != 3)
 			{
 				System.out.println("Usage: java FileServer path contactServerUrl/contactServerName fileServerName");
@@ -250,15 +262,41 @@ public class FileServerWS implements Runnable
 			}
 			
 			path = args[0];
-			url = args[1];
-			serverName = args[2];
 
-			FileServerWS server = new FileServerWS(path, url, serverName);
+			System.getProperties().put( "java.security.policy", "policy.all");
 
-			Endpoint.publish(
-			         "http://localhost:8080/"+serverName,
-			         server);
-			System.out.println( serverName+" started");
+			if( System.getSecurityManager() == null) {
+				System.setSecurityManager( new RMISecurityManager());
+			}
+
+			try { // start rmiregistry
+				LocateRegistry.createRegistry( 1099);
+			} catch( RemoteException e) { 
+				// if not start it
+				// do nothing - already started with rmiregistry
+			}
+
+			FileServer server = new FileServer(path, args[1], args[2]);
+			String name = args[2];
+			int i = 1;
+			boolean binded = false;
+			while(!binded)
+			{
+				try
+				{
+					Naming.bind( name, server);
+					binded = true;					
+					server.fileServerName = name;
+				}
+				catch(Exception e)
+				{
+					System.out.println("Server '"+name+"' Exists");
+					name = args[2] + "_" + i++;
+				}
+			}
+			
+			
+			System.out.println( "DirServer bound in registry with name '"+name+"'");
 			
 			try 
 			{
@@ -279,7 +317,6 @@ public class FileServerWS implements Runnable
 			th.printStackTrace();
 		}
 	}
-	
 
 
 }

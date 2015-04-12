@@ -1,4 +1,6 @@
 import java.util.*;
+import javax.xml.datatype.XMLGregorianCalendar;
+
 
 public class FileInfo implements java.io.Serializable
 {
@@ -11,16 +13,6 @@ public class FileInfo implements java.io.Serializable
 	public int childrenFiles;
 	public int childrenDirectories;
 	
-	public FileInfo( ws.FileInfo wsFile) 
-	{
-		this.name = wsFile.name;
-		this.length = wsFile.length;
-		this.modified = wsFile.modified;
-		this.isFile = wsFile.isFile;
-		this.childrenFiles = wsFile.childrenFiles;
-		this.childrenDirectories = wsFile.childrenDirectories;
-		
-	}
 	
 	public FileInfo( String name, long length, Date modified, boolean isFile, int childrenDirectories, int childrenFiles) 
 	{
@@ -40,6 +32,14 @@ public class FileInfo implements java.io.Serializable
 		this.length = length;
 		this.modified = modified;
 		this.isFile = isFile;
+	}
+
+
+	public static Date toDate(XMLGregorianCalendar calendar){
+	 if(calendar == null) {
+     return null;
+	 }
+	 return calendar.toGregorianCalendar().getTime();
 	}
 	
 	public String toString() 
