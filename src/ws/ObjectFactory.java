@@ -24,26 +24,26 @@ import javax.xml.namespace.QName;
 @XmlRegistry
 public class ObjectFactory {
 
-    private final static QName _GetFileInfo_QNAME = new QName("http://soap.srv/", "getFileInfo");
-    private final static QName _IOException_QNAME = new QName("http://soap.srv/", "IOException");
-    private final static QName _RmdirResponse_QNAME = new QName("http://soap.srv/", "rmdirResponse");
-    private final static QName _CreateFileResponse_QNAME = new QName("http://soap.srv/", "createFileResponse");
-    private final static QName _MkdirResponse_QNAME = new QName("http://soap.srv/", "mkdirResponse");
-    private final static QName _RunResponse_QNAME = new QName("http://soap.srv/", "runResponse");
-    private final static QName _Rmdir_QNAME = new QName("http://soap.srv/", "rmdir");
-    private final static QName _Mkdir_QNAME = new QName("http://soap.srv/", "mkdir");
-    private final static QName _Run_QNAME = new QName("http://soap.srv/", "run");
-    private final static QName _CreateFile_QNAME = new QName("http://soap.srv/", "createFile");
-    private final static QName _RmfileResponse_QNAME = new QName("http://soap.srv/", "rmfileResponse");
-    private final static QName _InfoNotFoundException_QNAME = new QName("http://soap.srv/", "InfoNotFoundException");
-    private final static QName _GetFileContentResponse_QNAME = new QName("http://soap.srv/", "getFileContentResponse");
-    private final static QName _Cp_QNAME = new QName("http://soap.srv/", "cp");
-    private final static QName _Dir_QNAME = new QName("http://soap.srv/", "dir");
-    private final static QName _GetFileContent_QNAME = new QName("http://soap.srv/", "getFileContent");
-    private final static QName _CpResponse_QNAME = new QName("http://soap.srv/", "cpResponse");
-    private final static QName _Rmfile_QNAME = new QName("http://soap.srv/", "rmfile");
-    private final static QName _DirResponse_QNAME = new QName("http://soap.srv/", "dirResponse");
-    private final static QName _GetFileInfoResponse_QNAME = new QName("http://soap.srv/", "getFileInfoResponse");
+    private final static QName _GetFileContentResponse_QNAME = new QName("http://ws.srv/", "getFileContentResponse");
+    private final static QName _Cp_QNAME = new QName("http://ws.srv/", "cp");
+    private final static QName _Dir_QNAME = new QName("http://ws.srv/", "dir");
+    private final static QName _GetFileContent_QNAME = new QName("http://ws.srv/", "getFileContent");
+    private final static QName _CpResponse_QNAME = new QName("http://ws.srv/", "cpResponse");
+    private final static QName _Rmfile_QNAME = new QName("http://ws.srv/", "rmfile");
+    private final static QName _DirResponse_QNAME = new QName("http://ws.srv/", "dirResponse");
+    private final static QName _GetFileInfoResponse_QNAME = new QName("http://ws.srv/", "getFileInfoResponse");
+    private final static QName _GetFileInfo_QNAME = new QName("http://ws.srv/", "getFileInfo");
+    private final static QName _IOException_QNAME = new QName("http://ws.srv/", "IOException");
+    private final static QName _RmdirResponse_QNAME = new QName("http://ws.srv/", "rmdirResponse");
+    private final static QName _MkdirResponse_QNAME = new QName("http://ws.srv/", "mkdirResponse");
+    private final static QName _CreateFileResponse_QNAME = new QName("http://ws.srv/", "createFileResponse");
+    private final static QName _RunResponse_QNAME = new QName("http://ws.srv/", "runResponse");
+    private final static QName _Rmdir_QNAME = new QName("http://ws.srv/", "rmdir");
+    private final static QName _Mkdir_QNAME = new QName("http://ws.srv/", "mkdir");
+    private final static QName _Run_QNAME = new QName("http://ws.srv/", "run");
+    private final static QName _CreateFile_QNAME = new QName("http://ws.srv/", "createFile");
+    private final static QName _RmfileResponse_QNAME = new QName("http://ws.srv/", "rmfileResponse");
+    private final static QName _InfoNotFoundException_QNAME = new QName("http://ws.srv/", "InfoNotFoundException");
 
     /**
      * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: ws
@@ -229,118 +229,10 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link GetFileInfo }{@code >}}
-     * 
-     */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "getFileInfo")
-    public JAXBElement<GetFileInfo> createGetFileInfo(GetFileInfo value) {
-        return new JAXBElement<GetFileInfo>(_GetFileInfo_QNAME, GetFileInfo.class, null, value);
-    }
-
-    /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link IOException }{@code >}}
-     * 
-     */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "IOException")
-    public JAXBElement<IOException> createIOException(IOException value) {
-        return new JAXBElement<IOException>(_IOException_QNAME, IOException.class, null, value);
-    }
-
-    /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link RmdirResponse }{@code >}}
-     * 
-     */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "rmdirResponse")
-    public JAXBElement<RmdirResponse> createRmdirResponse(RmdirResponse value) {
-        return new JAXBElement<RmdirResponse>(_RmdirResponse_QNAME, RmdirResponse.class, null, value);
-    }
-
-    /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link CreateFileResponse }{@code >}}
-     * 
-     */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "createFileResponse")
-    public JAXBElement<CreateFileResponse> createCreateFileResponse(CreateFileResponse value) {
-        return new JAXBElement<CreateFileResponse>(_CreateFileResponse_QNAME, CreateFileResponse.class, null, value);
-    }
-
-    /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link MkdirResponse }{@code >}}
-     * 
-     */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "mkdirResponse")
-    public JAXBElement<MkdirResponse> createMkdirResponse(MkdirResponse value) {
-        return new JAXBElement<MkdirResponse>(_MkdirResponse_QNAME, MkdirResponse.class, null, value);
-    }
-
-    /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link RunResponse }{@code >}}
-     * 
-     */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "runResponse")
-    public JAXBElement<RunResponse> createRunResponse(RunResponse value) {
-        return new JAXBElement<RunResponse>(_RunResponse_QNAME, RunResponse.class, null, value);
-    }
-
-    /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link Rmdir }{@code >}}
-     * 
-     */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "rmdir")
-    public JAXBElement<Rmdir> createRmdir(Rmdir value) {
-        return new JAXBElement<Rmdir>(_Rmdir_QNAME, Rmdir.class, null, value);
-    }
-
-    /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link Mkdir }{@code >}}
-     * 
-     */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "mkdir")
-    public JAXBElement<Mkdir> createMkdir(Mkdir value) {
-        return new JAXBElement<Mkdir>(_Mkdir_QNAME, Mkdir.class, null, value);
-    }
-
-    /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link Run }{@code >}}
-     * 
-     */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "run")
-    public JAXBElement<Run> createRun(Run value) {
-        return new JAXBElement<Run>(_Run_QNAME, Run.class, null, value);
-    }
-
-    /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link CreateFile }{@code >}}
-     * 
-     */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "createFile")
-    public JAXBElement<CreateFile> createCreateFile(CreateFile value) {
-        return new JAXBElement<CreateFile>(_CreateFile_QNAME, CreateFile.class, null, value);
-    }
-
-    /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link RmfileResponse }{@code >}}
-     * 
-     */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "rmfileResponse")
-    public JAXBElement<RmfileResponse> createRmfileResponse(RmfileResponse value) {
-        return new JAXBElement<RmfileResponse>(_RmfileResponse_QNAME, RmfileResponse.class, null, value);
-    }
-
-    /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link InfoNotFoundException }{@code >}}
-     * 
-     */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "InfoNotFoundException")
-    public JAXBElement<InfoNotFoundException> createInfoNotFoundException(InfoNotFoundException value) {
-        return new JAXBElement<InfoNotFoundException>(_InfoNotFoundException_QNAME, InfoNotFoundException.class, null, value);
-    }
-
-    /**
      * Create an instance of {@link JAXBElement }{@code <}{@link GetFileContentResponse }{@code >}}
      * 
      */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "getFileContentResponse")
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "getFileContentResponse")
     public JAXBElement<GetFileContentResponse> createGetFileContentResponse(GetFileContentResponse value) {
         return new JAXBElement<GetFileContentResponse>(_GetFileContentResponse_QNAME, GetFileContentResponse.class, null, value);
     }
@@ -349,7 +241,7 @@ public class ObjectFactory {
      * Create an instance of {@link JAXBElement }{@code <}{@link Cp }{@code >}}
      * 
      */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "cp")
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "cp")
     public JAXBElement<Cp> createCp(Cp value) {
         return new JAXBElement<Cp>(_Cp_QNAME, Cp.class, null, value);
     }
@@ -358,7 +250,7 @@ public class ObjectFactory {
      * Create an instance of {@link JAXBElement }{@code <}{@link Dir }{@code >}}
      * 
      */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "dir")
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "dir")
     public JAXBElement<Dir> createDir(Dir value) {
         return new JAXBElement<Dir>(_Dir_QNAME, Dir.class, null, value);
     }
@@ -367,7 +259,7 @@ public class ObjectFactory {
      * Create an instance of {@link JAXBElement }{@code <}{@link GetFileContent }{@code >}}
      * 
      */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "getFileContent")
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "getFileContent")
     public JAXBElement<GetFileContent> createGetFileContent(GetFileContent value) {
         return new JAXBElement<GetFileContent>(_GetFileContent_QNAME, GetFileContent.class, null, value);
     }
@@ -376,7 +268,7 @@ public class ObjectFactory {
      * Create an instance of {@link JAXBElement }{@code <}{@link CpResponse }{@code >}}
      * 
      */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "cpResponse")
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "cpResponse")
     public JAXBElement<CpResponse> createCpResponse(CpResponse value) {
         return new JAXBElement<CpResponse>(_CpResponse_QNAME, CpResponse.class, null, value);
     }
@@ -385,7 +277,7 @@ public class ObjectFactory {
      * Create an instance of {@link JAXBElement }{@code <}{@link Rmfile }{@code >}}
      * 
      */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "rmfile")
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "rmfile")
     public JAXBElement<Rmfile> createRmfile(Rmfile value) {
         return new JAXBElement<Rmfile>(_Rmfile_QNAME, Rmfile.class, null, value);
     }
@@ -394,7 +286,7 @@ public class ObjectFactory {
      * Create an instance of {@link JAXBElement }{@code <}{@link DirResponse }{@code >}}
      * 
      */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "dirResponse")
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "dirResponse")
     public JAXBElement<DirResponse> createDirResponse(DirResponse value) {
         return new JAXBElement<DirResponse>(_DirResponse_QNAME, DirResponse.class, null, value);
     }
@@ -403,9 +295,117 @@ public class ObjectFactory {
      * Create an instance of {@link JAXBElement }{@code <}{@link GetFileInfoResponse }{@code >}}
      * 
      */
-    @XmlElementDecl(namespace = "http://soap.srv/", name = "getFileInfoResponse")
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "getFileInfoResponse")
     public JAXBElement<GetFileInfoResponse> createGetFileInfoResponse(GetFileInfoResponse value) {
         return new JAXBElement<GetFileInfoResponse>(_GetFileInfoResponse_QNAME, GetFileInfoResponse.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link GetFileInfo }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "getFileInfo")
+    public JAXBElement<GetFileInfo> createGetFileInfo(GetFileInfo value) {
+        return new JAXBElement<GetFileInfo>(_GetFileInfo_QNAME, GetFileInfo.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link IOException }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "IOException")
+    public JAXBElement<IOException> createIOException(IOException value) {
+        return new JAXBElement<IOException>(_IOException_QNAME, IOException.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link RmdirResponse }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "rmdirResponse")
+    public JAXBElement<RmdirResponse> createRmdirResponse(RmdirResponse value) {
+        return new JAXBElement<RmdirResponse>(_RmdirResponse_QNAME, RmdirResponse.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link MkdirResponse }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "mkdirResponse")
+    public JAXBElement<MkdirResponse> createMkdirResponse(MkdirResponse value) {
+        return new JAXBElement<MkdirResponse>(_MkdirResponse_QNAME, MkdirResponse.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link CreateFileResponse }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "createFileResponse")
+    public JAXBElement<CreateFileResponse> createCreateFileResponse(CreateFileResponse value) {
+        return new JAXBElement<CreateFileResponse>(_CreateFileResponse_QNAME, CreateFileResponse.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link RunResponse }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "runResponse")
+    public JAXBElement<RunResponse> createRunResponse(RunResponse value) {
+        return new JAXBElement<RunResponse>(_RunResponse_QNAME, RunResponse.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link Rmdir }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "rmdir")
+    public JAXBElement<Rmdir> createRmdir(Rmdir value) {
+        return new JAXBElement<Rmdir>(_Rmdir_QNAME, Rmdir.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link Mkdir }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "mkdir")
+    public JAXBElement<Mkdir> createMkdir(Mkdir value) {
+        return new JAXBElement<Mkdir>(_Mkdir_QNAME, Mkdir.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link Run }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "run")
+    public JAXBElement<Run> createRun(Run value) {
+        return new JAXBElement<Run>(_Run_QNAME, Run.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link CreateFile }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "createFile")
+    public JAXBElement<CreateFile> createCreateFile(CreateFile value) {
+        return new JAXBElement<CreateFile>(_CreateFile_QNAME, CreateFile.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link RmfileResponse }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "rmfileResponse")
+    public JAXBElement<RmfileResponse> createRmfileResponse(RmfileResponse value) {
+        return new JAXBElement<RmfileResponse>(_RmfileResponse_QNAME, RmfileResponse.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link InfoNotFoundException }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "InfoNotFoundException")
+    public JAXBElement<InfoNotFoundException> createInfoNotFoundException(InfoNotFoundException value) {
+        return new JAXBElement<InfoNotFoundException>(_InfoNotFoundException_QNAME, InfoNotFoundException.class, null, value);
     }
 
 }

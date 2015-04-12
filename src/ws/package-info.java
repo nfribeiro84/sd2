@@ -1,2 +1,2 @@
-@javax.xml.bind.annotation.XmlSchema(namespace = "http://soap.srv/")
+@javax.xml.bind.annotation.XmlSchema(namespace = "http://ws.srv/")
 package ws;

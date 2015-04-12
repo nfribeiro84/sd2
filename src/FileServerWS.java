@@ -16,7 +16,7 @@ import java.rmi.registry.*;
 //import javax.xml.datatype.DatatypeConfigurationException;
 //import javax.xml.datatype.XMLGregorianCalendar;
 
-@WebService(targetNamespace="http://soap.srv/")
+@WebService(targetNamespace="http://ws.srv/")
 public class FileServerWS implements Runnable
 {
 	private String basePathName;

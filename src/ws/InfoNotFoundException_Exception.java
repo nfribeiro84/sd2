@@ -10,7 +10,7 @@ import javax.xml.ws.WebFault;
  * Generated source version: 2.2
  * 
  */
-@WebFault(name = "InfoNotFoundException", targetNamespace = "http://soap.srv/")
+@WebFault(name = "InfoNotFoundException", targetNamespace = "http://ws.srv/")
 public class InfoNotFoundException_Exception
     extends Exception
 {

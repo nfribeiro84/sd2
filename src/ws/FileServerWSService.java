@@ -17,14 +17,14 @@ import javax.xml.ws.WebServiceFeature;
  * Generated source version: 2.2
  * 
  */
-@WebServiceClient(name = "FileServerWSService", targetNamespace = "http://soap.srv/", wsdlLocation = "http://localhost:8080/FileServerWs?wsdl")
+@WebServiceClient(name = "FileServerWSService", targetNamespace = "http://ws.srv/", wsdlLocation = "http://localhost:8080/FileServerWs?wsdl")
 public class FileServerWSService
     extends Service
 {
 
     private final static URL FILESERVERWSSERVICE_WSDL_LOCATION;
     private final static WebServiceException FILESERVERWSSERVICE_EXCEPTION;
-    private final static QName FILESERVERWSSERVICE_QNAME = new QName("http://soap.srv/", "FileServerWSService");
+    private final static QName FILESERVERWSSERVICE_QNAME = new QName("http://ws.srv/", "FileServerWSService");
 
     static {
         URL url = null;
@@ -69,7 +69,7 @@ public class FileServerWSService
      */
     @WebEndpoint(name = "FileServerWSPort")
     public FileServerWS getFileServerWSPort() {
-        return super.getPort(new QName("http://soap.srv/", "FileServerWSPort"), FileServerWS.class);
+        return super.getPort(new QName("http://ws.srv/", "FileServerWSPort"), FileServerWS.class);
     }
 
     /**
@@ -81,7 +81,7 @@ public class FileServerWSService
      */
     @WebEndpoint(name = "FileServerWSPort")
     public FileServerWS getFileServerWSPort(WebServiceFeature... features) {
-        return super.getPort(new QName("http://soap.srv/", "FileServerWSPort"), FileServerWS.class, features);
+        return super.getPort(new QName("http://ws.srv/", "FileServerWSPort"), FileServerWS.class, features);
     }
 
     private static URL __getWsdlLocation() {

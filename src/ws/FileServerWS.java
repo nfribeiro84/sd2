@@ -19,7 +19,7 @@ import javax.xml.ws.ResponseWrapper;
  * Generated source version: 2.2
  * 
  */
-@WebService(name = "FileServerWS", targetNamespace = "http://soap.srv/")
+@WebService(name = "FileServerWS", targetNamespace = "http://ws.srv/")
 @XmlSeeAlso({
     ObjectFactory.class
 })
@@ -30,9 +30,9 @@ public interface FileServerWS {
      * 
      */
     @WebMethod
-    @RequestWrapper(localName = "run", targetNamespace = "http://soap.srv/", className = "ws.Run")
-    @ResponseWrapper(localName = "runResponse", targetNamespace = "http://soap.srv/", className = "ws.RunResponse")
-    @Action(input = "http://soap.srv/FileServerWS/runRequest", output = "http://soap.srv/FileServerWS/runResponse")
+    @RequestWrapper(localName = "run", targetNamespace = "http://ws.srv/", className = "ws.Run")
+    @ResponseWrapper(localName = "runResponse", targetNamespace = "http://ws.srv/", className = "ws.RunResponse")
+    @Action(input = "http://ws.srv/FileServerWS/runRequest", output = "http://ws.srv/FileServerWS/runResponse")
     public void run();
 
     /**
@@ -43,10 +43,25 @@ public interface FileServerWS {
      */
     @WebMethod
     @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "mkdir", targetNamespace = "http://soap.srv/", className = "ws.Mkdir")
-    @ResponseWrapper(localName = "mkdirResponse", targetNamespace = "http://soap.srv/", className = "ws.MkdirResponse")
-    @Action(input = "http://soap.srv/FileServerWS/mkdirRequest", output = "http://soap.srv/FileServerWS/mkdirResponse")
+    @RequestWrapper(localName = "mkdir", targetNamespace = "http://ws.srv/", className = "ws.Mkdir")
+    @ResponseWrapper(localName = "mkdirResponse", targetNamespace = "http://ws.srv/", className = "ws.MkdirResponse")
+    @Action(input = "http://ws.srv/FileServerWS/mkdirRequest", output = "http://ws.srv/FileServerWS/mkdirResponse")
     public boolean mkdir(
+        @WebParam(name = "arg0", targetNamespace = "")
+        String arg0);
+
+    /**
+     * 
+     * @param arg0
+     * @return
+     *     returns boolean
+     */
+    @WebMethod
+    @WebResult(targetNamespace = "")
+    @RequestWrapper(localName = "rmdir", targetNamespace = "http://ws.srv/", className = "ws.Rmdir")
+    @ResponseWrapper(localName = "rmdirResponse", targetNamespace = "http://ws.srv/", className = "ws.RmdirResponse")
+    @Action(input = "http://ws.srv/FileServerWS/rmdirRequest", output = "http://ws.srv/FileServerWS/rmdirResponse")
+    public boolean rmdir(
         @WebParam(name = "arg0", targetNamespace = "")
         String arg0);
 
@@ -60,10 +75,10 @@ public interface FileServerWS {
      */
     @WebMethod
     @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "cp", targetNamespace = "http://soap.srv/", className = "ws.Cp")
-    @ResponseWrapper(localName = "cpResponse", targetNamespace = "http://soap.srv/", className = "ws.CpResponse")
-    @Action(input = "http://soap.srv/FileServerWS/cpRequest", output = "http://soap.srv/FileServerWS/cpResponse", fault = {
-        @FaultAction(className = IOException_Exception.class, value = "http://soap.srv/FileServerWS/cp/Fault/IOException")
+    @RequestWrapper(localName = "cp", targetNamespace = "http://ws.srv/", className = "ws.Cp")
+    @ResponseWrapper(localName = "cpResponse", targetNamespace = "http://ws.srv/", className = "ws.CpResponse")
+    @Action(input = "http://ws.srv/FileServerWS/cpRequest", output = "http://ws.srv/FileServerWS/cpResponse", fault = {
+        @FaultAction(className = IOException_Exception.class, value = "http://ws.srv/FileServerWS/cp/Fault/IOException")
     })
     public boolean cp(
         @WebParam(name = "arg0", targetNamespace = "")
@@ -81,24 +96,9 @@ public interface FileServerWS {
      */
     @WebMethod
     @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "rmdir", targetNamespace = "http://soap.srv/", className = "ws.Rmdir")
-    @ResponseWrapper(localName = "rmdirResponse", targetNamespace = "http://soap.srv/", className = "ws.RmdirResponse")
-    @Action(input = "http://soap.srv/FileServerWS/rmdirRequest", output = "http://soap.srv/FileServerWS/rmdirResponse")
-    public boolean rmdir(
-        @WebParam(name = "arg0", targetNamespace = "")
-        String arg0);
-
-    /**
-     * 
-     * @param arg0
-     * @return
-     *     returns boolean
-     */
-    @WebMethod
-    @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "rmfile", targetNamespace = "http://soap.srv/", className = "ws.Rmfile")
-    @ResponseWrapper(localName = "rmfileResponse", targetNamespace = "http://soap.srv/", className = "ws.RmfileResponse")
-    @Action(input = "http://soap.srv/FileServerWS/rmfileRequest", output = "http://soap.srv/FileServerWS/rmfileResponse")
+    @RequestWrapper(localName = "rmfile", targetNamespace = "http://ws.srv/", className = "ws.Rmfile")
+    @ResponseWrapper(localName = "rmfileResponse", targetNamespace = "http://ws.srv/", className = "ws.RmfileResponse")
+    @Action(input = "http://ws.srv/FileServerWS/rmfileRequest", output = "http://ws.srv/FileServerWS/rmfileResponse")
     public boolean rmfile(
         @WebParam(name = "arg0", targetNamespace = "")
         String arg0);
@@ -112,10 +112,10 @@ public interface FileServerWS {
      */
     @WebMethod
     @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "getFileInfo", targetNamespace = "http://soap.srv/", className = "ws.GetFileInfo")
-    @ResponseWrapper(localName = "getFileInfoResponse", targetNamespace = "http://soap.srv/", className = "ws.GetFileInfoResponse")
-    @Action(input = "http://soap.srv/FileServerWS/getFileInfoRequest", output = "http://soap.srv/FileServerWS/getFileInfoResponse", fault = {
-        @FaultAction(className = InfoNotFoundException_Exception.class, value = "http://soap.srv/FileServerWS/getFileInfo/Fault/InfoNotFoundException")
+    @RequestWrapper(localName = "getFileInfo", targetNamespace = "http://ws.srv/", className = "ws.GetFileInfo")
+    @ResponseWrapper(localName = "getFileInfoResponse", targetNamespace = "http://ws.srv/", className = "ws.GetFileInfoResponse")
+    @Action(input = "http://ws.srv/FileServerWS/getFileInfoRequest", output = "http://ws.srv/FileServerWS/getFileInfoResponse", fault = {
+        @FaultAction(className = InfoNotFoundException_Exception.class, value = "http://ws.srv/FileServerWS/getFileInfo/Fault/InfoNotFoundException")
     })
     public FileInfo getFileInfo(
         @WebParam(name = "arg0", targetNamespace = "")
@@ -128,16 +128,16 @@ public interface FileServerWS {
      * @param arg0
      * @return
      *     returns ws.FileContent
-     * @throws InfoNotFoundException_Exception
      * @throws IOException_Exception
+     * @throws InfoNotFoundException_Exception
      */
     @WebMethod
     @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "getFileContent", targetNamespace = "http://soap.srv/", className = "ws.GetFileContent")
-    @ResponseWrapper(localName = "getFileContentResponse", targetNamespace = "http://soap.srv/", className = "ws.GetFileContentResponse")
-    @Action(input = "http://soap.srv/FileServerWS/getFileContentRequest", output = "http://soap.srv/FileServerWS/getFileContentResponse", fault = {
-        @FaultAction(className = InfoNotFoundException_Exception.class, value = "http://soap.srv/FileServerWS/getFileContent/Fault/InfoNotFoundException"),
-        @FaultAction(className = IOException_Exception.class, value = "http://soap.srv/FileServerWS/getFileContent/Fault/IOException")
+    @RequestWrapper(localName = "getFileContent", targetNamespace = "http://ws.srv/", className = "ws.GetFileContent")
+    @ResponseWrapper(localName = "getFileContentResponse", targetNamespace = "http://ws.srv/", className = "ws.GetFileContentResponse")
+    @Action(input = "http://ws.srv/FileServerWS/getFileContentRequest", output = "http://ws.srv/FileServerWS/getFileContentResponse", fault = {
+        @FaultAction(className = InfoNotFoundException_Exception.class, value = "http://ws.srv/FileServerWS/getFileContent/Fault/InfoNotFoundException"),
+        @FaultAction(className = IOException_Exception.class, value = "http://ws.srv/FileServerWS/getFileContent/Fault/IOException")
     })
     public FileContent getFileContent(
         @WebParam(name = "arg0", targetNamespace = "")
@@ -156,11 +156,11 @@ public interface FileServerWS {
      */
     @WebMethod
     @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "createFile", targetNamespace = "http://soap.srv/", className = "ws.CreateFile")
-    @ResponseWrapper(localName = "createFileResponse", targetNamespace = "http://soap.srv/", className = "ws.CreateFileResponse")
-    @Action(input = "http://soap.srv/FileServerWS/createFileRequest", output = "http://soap.srv/FileServerWS/createFileResponse", fault = {
-        @FaultAction(className = InfoNotFoundException_Exception.class, value = "http://soap.srv/FileServerWS/createFile/Fault/InfoNotFoundException"),
-        @FaultAction(className = IOException_Exception.class, value = "http://soap.srv/FileServerWS/createFile/Fault/IOException")
+    @RequestWrapper(localName = "createFile", targetNamespace = "http://ws.srv/", className = "ws.CreateFile")
+    @ResponseWrapper(localName = "createFileResponse", targetNamespace = "http://ws.srv/", className = "ws.CreateFileResponse")
+    @Action(input = "http://ws.srv/FileServerWS/createFileRequest", output = "http://ws.srv/FileServerWS/createFileResponse", fault = {
+        @FaultAction(className = InfoNotFoundException_Exception.class, value = "http://ws.srv/FileServerWS/createFile/Fault/InfoNotFoundException"),
+        @FaultAction(className = IOException_Exception.class, value = "http://ws.srv/FileServerWS/createFile/Fault/IOException")
     })
     public boolean createFile(
         @WebParam(name = "arg0", targetNamespace = "")
@@ -179,10 +179,10 @@ public interface FileServerWS {
      */
     @WebMethod
     @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "dir", targetNamespace = "http://soap.srv/", className = "ws.Dir")
-    @ResponseWrapper(localName = "dirResponse", targetNamespace = "http://soap.srv/", className = "ws.DirResponse")
-    @Action(input = "http://soap.srv/FileServerWS/dirRequest", output = "http://soap.srv/FileServerWS/dirResponse", fault = {
-        @FaultAction(className = InfoNotFoundException_Exception.class, value = "http://soap.srv/FileServerWS/dir/Fault/InfoNotFoundException")
+    @RequestWrapper(localName = "dir", targetNamespace = "http://ws.srv/", className = "ws.Dir")
+    @ResponseWrapper(localName = "dirResponse", targetNamespace = "http://ws.srv/", className = "ws.DirResponse")
+    @Action(input = "http://ws.srv/FileServerWS/dirRequest", output = "http://ws.srv/FileServerWS/dirResponse", fault = {
+        @FaultAction(className = InfoNotFoundException_Exception.class, value = "http://ws.srv/FileServerWS/dir/Fault/InfoNotFoundException")
     })
     public List<String> dir(
         @WebParam(name = "arg0", targetNamespace = "")
