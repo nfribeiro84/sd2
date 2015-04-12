@@ -13,7 +13,6 @@ java -cp ./bin FileClient rmi://localhost/myContactServer c1
 
 
 # Compilar tudo (root dir)
-javac -d ../bin *.java
 javac -d ./bin -cp ./src/ src/*.java	
 
 
