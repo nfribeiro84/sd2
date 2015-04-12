@@ -1,5 +1,4 @@
 
-
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -13,7 +12,6 @@ import javax.xml.namespace.QName;
 //import aula3.clt.FileServerImplWS;
 //import aula3.clt.FileServerImplWSService;
 
-import ws.*;
 
 /**
  * Classe base do cliente
@@ -24,7 +22,7 @@ public class FileClient
 	String contactServerURL;
 	String username;
 	IFileServer rmiServer;
-	ws.FileServerWS wsServer;
+	FileServerWS wsServer;
 	
 	protected FileClient( String url, String username) 
 	{
@@ -250,7 +248,7 @@ public class FileClient
 			}
 			
 			if(rmiServer == null)
-				return wsServer.getFileInfo(path);
+				return new FileInfo(wsServer.getFileInfo(path));
 			else
 				return rmiServer.getFileInfo(path);
 			
@@ -272,7 +270,7 @@ public class FileClient
 	protected boolean cp( String fromServer, boolean fromIsURL, String fromPath,
 							String toServer, boolean toIsURL, String toPath) 
 	{
-		FileContent content = null;
+		rmi.FileContent content = null;
 		
 		if(fromServer == null)
 		{
@@ -288,7 +286,7 @@ public class FileClient
 					raf.readFully(b);
 					raf.close();
 
-					content =  new FileContent( fromPath, f.length(), new Date(f.lastModified()), f.isFile(), b);
+					content =  new rmi.FileContent( fromPath, f.length(), new Date(f.lastModified()), f.isFile(), b);
 				}
 				catch(Exception e)
 				{
@@ -310,7 +308,7 @@ public class FileClient
 					return false;
 				}
 				if(rmiServer == null)
-					content = wsServer.getFileContent(fromPath);
+					content = (rmi.FileContent) wsServer.getFileContent(fromPath);
 				else
 					content = rmiServer.getFileContent(fromPath);
 			}

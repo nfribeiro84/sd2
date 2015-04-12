@@ -1,5 +1,4 @@
 
-
 public class ServerExistsException
 		extends Exception
 {

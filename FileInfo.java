@@ -1,5 +1,3 @@
-
-
 import java.util.*;
 
 public class FileInfo implements java.io.Serializable
@@ -12,6 +10,17 @@ public class FileInfo implements java.io.Serializable
 	public boolean isFile;
 	public int childrenFiles;
 	public int childrenDirectories;
+	
+	public FileInfo( ws.FileInfo wsFile) 
+	{
+		this.name = wsFile.name;
+		this.length = wsFile.length;
+		this.modified = wsFile.modified;
+		this.isFile = wsFile.isFile;
+		this.childrenFiles = wsFile.childrenFiles;
+		this.childrenDirectories = wsFile.childrenDirectories;
+		
+	}
 	
 	public FileInfo( String name, long length, Date modified, boolean isFile, int childrenDirectories, int childrenFiles) 
 	{

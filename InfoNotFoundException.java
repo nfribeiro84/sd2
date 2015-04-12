@@ -1,5 +1,4 @@
 
-
 public class InfoNotFoundException
 		extends Exception
 {
