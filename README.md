@@ -1,18 +1,18 @@
 # sd1
 Trabalho Prático 1 de Sistemas Distribuídos
 
-# File servers
+# File servers (from root dir)
 java -cp ./bin/ FileServerWS . localhost/myContactServer FileServerWs
 java -cp ./bin/ FileServer . localhost/myContactServer FileServer
 
-# Contact server
+# Contact server (from root dir)
 java -cp ./bin/ ContactServer
 
-# Client
+# Client (from root dir)
 java -cp ./bin FileClient rmi://localhost/myContactServer c1
 
 
-# Compilar tudo (root dir)
+# Compilar tudo (from root dir)
 javac -d ./bin -cp ./src/ src/*.java	
 
 
