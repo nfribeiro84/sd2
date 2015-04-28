@@ -22,6 +22,7 @@ public class FileServer
 	private String contactServerURL;
 	private String fileServerName;
 	private String protocol;
+	private boolean primary;
 
 	private int ping_interval = 3;
 	
