@@ -19,3 +19,10 @@ javac -d ./bin -cp ./src/ src/*.java
 # Wsimport (from src dir)
 wsimport -d ../bin/ -s . -p ws http://localhost:8080/FileServerWs?wsdl
 
+
+
+#Compile with jar in classpath
+javac -cp "aula6/*" aula6/DropboxExample.java
+
+#Executar
+java -cp "aula6/*":. aula6.DropboxExample
