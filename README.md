@@ -11,10 +11,12 @@ java -cp ./bin/ ContactServer
 # Client (from root dir)
 java -cp ./bin FileClient rmi://localhost/myContactServer c1
 
+# DropboxExample2
+java -cp ./bin/:aula6/* DropboxExample2
 
 # Compilar tudo (from root dir)
-javac -d ./bin -cp ./src/ src/*.java	
-
+(old) javac -d ./bin -cp ./src/ src/*.java
+javac -d ./bin -cp ./src/:"aula6/*" src/*.java
 
 # Wsimport (from src dir)
 wsimport -d ../bin/ -s . -p ws http://localhost:8080/FileServerWs?wsdl

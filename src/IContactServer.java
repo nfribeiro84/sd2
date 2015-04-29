@@ -19,7 +19,7 @@ public interface IContactServer extends Remote
 	/**
 	 * Adiciona um novo servidor à lista de servidores conhecidos.
 	 */
-	public boolean subscribe(String name, String protocol) throws RemoteException, ServerExistsException;
+	public int subscribe(String name, String protocol) throws RemoteException, ServerExistsException;
 
 	/**
 	 * Resfresca o ultimo contacto do servidor de ficheiros na timetable.
