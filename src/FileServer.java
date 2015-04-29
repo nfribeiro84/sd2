@@ -188,6 +188,13 @@ public class FileServer
 			throw new InfoNotFoundException( "Path not found :" + path);
 	}
 
+	@Override
+	public boolean setAsPrimary()
+	{
+		System.out.println("Set as primary server");
+		return this.primary = true;
+	}
+
 	public FileContent getFileContent(String path) throws RemoteException, InfoNotFoundException, IOException 
 	{		
 		System.out.println("Pedido de 'File Content' do cliente " + checkClientHost());

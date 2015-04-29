@@ -170,6 +170,10 @@ public class ContactServer
 				if (ips.size() == 0) {
 					//remove o ip do nome do servidor correpondente
 					this.fileServers.remove(name);
+
+					//unbind server name from registry
+					Naming.unbind(name);
+
 					System.out.println("Removed servename: " + name);
 				}
 				else if (is_primary)
@@ -188,6 +192,7 @@ public class ContactServer
 	private void setServerAsPrimary(String url) throws Exception {
 
 		IFileServer fServer = (IFileServer) Naming.lookup(url);
+		if(fServer.setAsPrimary() != true) throw new Exception("Cannot set '"+url+"' as primary");
 		//return fServer;
 
 	}
