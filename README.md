@@ -25,6 +25,11 @@ wsimport -d ../bin/ -s . -p ws http://localhost:8080/FileServerWs?wsdl
 
 #Compile with jar in classpath
 javac -cp "aula6/*" aula6/DropboxExample.java
+ou
+javac -d ./bin -cp "lib/*" -sourcepath src src/*.java
 
 #Executar
-java -cp "aula6/*":. aula6.DropboxExample
+java -cp ./bin:.:"lib/*" DropboxServer . localhost/myContactServer DServer
+
+
+
