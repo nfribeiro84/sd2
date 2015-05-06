@@ -8,6 +8,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.sql.Timestamp;
 import java.io.*;
 
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import javax.xml.namespace.QName;
+import ws.FileServerWSService;
+
 public class ContactServer
 		extends UnicastRemoteObject
 		implements IContactServer, Runnable
@@ -64,20 +70,24 @@ public class ContactServer
 		}
 	}
 
-	//@Override
-	public boolean subscribe(String name, String protocol) throws RemoteException, ServerExistsException{
+	/**
+	*		Returns -1 in case of error
+	*		Returns 1 in case the server is primary
+	*		Returns > 1 in case the server is not primary
+	*/
+	public int subscribe(String name, String protocol) throws RemoteException, ServerExistsException{
 		String client_ip = "";
 		try {
 			client_ip = java.rmi.server.RemoteServer.getClientHost();
 		} catch (ServerNotActiveException e) {
 			System.out.println("Error subscribing:" + e.getMessage());
+			return -1;
 		}
 
 		if (serverExists(name, client_ip, protocol))
 			throw new ServerExistsException("Server " + name + "@" + client_ip + " exists");
 
-		addServer(name, client_ip, protocol);
-		return true;
+		return addServer(name, client_ip, protocol);
 	}
 
 
@@ -109,11 +119,11 @@ public class ContactServer
   }
 
 	//@Override
-	private void addServer(String name, String ip, String protocol) {
+	private int addServer(String name, String ip, String protocol) {
 		List<String> ips = new CopyOnWriteArrayList<String>();
 
 		String url = buildUrl(ip, name, protocol);
-		System.out.println(url);
+		//System.out.println(url);
 
 		if(this.fileServers.containsKey(name))
 		{
@@ -136,6 +146,7 @@ public class ContactServer
 		this.timetable.put(url, new Timestamp(date.getTime()));
 		System.out.println("Added timetable to server: " + name + "@" + ip + ": " + this.timetable.get(name + "@" + ip));
 
+		return ips.size();
 	}
 
 	private boolean serverExists(String name, String ip, String protocol) {
@@ -153,17 +164,64 @@ public class ContactServer
 	//@Override
 	private void removeServer(String name, String url) {
 
-		List<String> ips = this.fileServers.get(name);
-		if(ips != null) {
-			ips.remove(url);
-			if (ips.size() == 0) {
-				//remove o ip do nome do servidor correpondente
-				this.fileServers.remove(name);
-				System.out.println("Removed servename: " + name);
+		try {
+			List<String> ips = this.fileServers.get(name);
+			
+			if(ips != null) {
+
+				boolean is_primary = ips.indexOf(url) == 0;
+				
+				ips.remove(url);
+				
+				if (ips.size() == 0) {
+					//remove o ip do nome do servidor correpondente
+					this.fileServers.remove(name);
+
+					//unbind server name from registry
+					Naming.unbind(name);
+
+					System.out.println("Removed servename: " + name);
+				}
+				else if (is_primary)
+				{
+					System.out.println("Set "+ips.get(0)+" as primary");
+					if(setServerAsPrimary(ips.get(0)))
+						System.out.println("Set success");
+					else
+						System.out.println("An error occured");
+				}
 			}
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
 		}
 	}
 
+
+
+	private boolean setServerAsPrimary(String url) throws Exception {
+
+		try
+		{	
+			if(url.startsWith("http"))
+			{
+				FileServerWSService service = new FileServerWSService( new URL(url), new QName("http://ws.srv/", "FileServerWSService"));
+				ws.FileServerWS wsServer = service.getFileServerWSPort();
+				return wsServer.setAsPrimary();
+			}
+			else
+			{
+				System.out.println("is rmiiii: "+url);
+				IFileServer rmiServer = (IFileServer) Naming.lookup(url);
+				System.out.println("deuu");
+				return rmiServer.setAsPrimary();
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
 
 	private void checkServerStatus(){
 		

@@ -29,6 +29,8 @@ public class ObjectFactory {
     private final static QName _Dir_QNAME = new QName("http://ws.srv/", "dir");
     private final static QName _GetFileContent_QNAME = new QName("http://ws.srv/", "getFileContent");
     private final static QName _CpResponse_QNAME = new QName("http://ws.srv/", "cpResponse");
+    private final static QName _SetAsPrimary_QNAME = new QName("http://ws.srv/", "setAsPrimary");
+    private final static QName _SetAsPrimaryResponse_QNAME = new QName("http://ws.srv/", "setAsPrimaryResponse");
     private final static QName _Rmfile_QNAME = new QName("http://ws.srv/", "rmfile");
     private final static QName _DirResponse_QNAME = new QName("http://ws.srv/", "dirResponse");
     private final static QName _GetFileInfoResponse_QNAME = new QName("http://ws.srv/", "getFileInfoResponse");
@@ -173,6 +175,14 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link SetAsPrimary }
+     * 
+     */
+    public SetAsPrimary createSetAsPrimary() {
+        return new SetAsPrimary();
+    }
+
+    /**
      * Create an instance of {@link CpResponse }
      * 
      */
@@ -186,6 +196,14 @@ public class ObjectFactory {
      */
     public GetFileContent createGetFileContent() {
         return new GetFileContent();
+    }
+
+    /**
+     * Create an instance of {@link SetAsPrimaryResponse }
+     * 
+     */
+    public SetAsPrimaryResponse createSetAsPrimaryResponse() {
+        return new SetAsPrimaryResponse();
     }
 
     /**
@@ -271,6 +289,24 @@ public class ObjectFactory {
     @XmlElementDecl(namespace = "http://ws.srv/", name = "cpResponse")
     public JAXBElement<CpResponse> createCpResponse(CpResponse value) {
         return new JAXBElement<CpResponse>(_CpResponse_QNAME, CpResponse.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link SetAsPrimary }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "setAsPrimary")
+    public JAXBElement<SetAsPrimary> createSetAsPrimary(SetAsPrimary value) {
+        return new JAXBElement<SetAsPrimary>(_SetAsPrimary_QNAME, SetAsPrimary.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link SetAsPrimaryResponse }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "setAsPrimaryResponse")
+    public JAXBElement<SetAsPrimaryResponse> createSetAsPrimaryResponse(SetAsPrimaryResponse value) {
+        return new JAXBElement<SetAsPrimaryResponse>(_SetAsPrimaryResponse_QNAME, SetAsPrimaryResponse.class, null, value);
     }
 
     /**

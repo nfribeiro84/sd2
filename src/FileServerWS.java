@@ -55,7 +55,7 @@ public class FileServerWS implements Runnable
 	
 	private IContactServer subscribeToContact(IContactServer contactServer) throws Exception
 	{
-		if(contactServer.subscribe(this.fileServerName, this.protocol))
+		if(contactServer.subscribe(this.fileServerName, this.protocol) != -1)
 			return contactServer;
 		else throw new Exception("Couldn't conecto to contact server");
 	}
@@ -178,6 +178,15 @@ public class FileServerWS implements Runnable
 			throw new InfoNotFoundException( "Path not found :" + path);
 	}
 
+
+
+	@WebMethod
+	public boolean setAsPrimary()
+	{
+		System.out.println("Set this as primary server");
+		this.primary = true;
+		return true;
+	}
 
 	public FileContent getFileContent(String path) throws InfoNotFoundException, IOException 
 	{		

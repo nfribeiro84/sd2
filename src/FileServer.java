@@ -44,8 +44,13 @@ public class FileServer
 	
 	private IContactServer subscribeToContact(IContactServer contactServer) throws Exception
 	{
-		if(contactServer.subscribe(this.fileServerName, this.protocol))
+		int res = contactServer.subscribe(this.fileServerName, this.protocol);
+		if( res != -1)
+		{
+			if (res == 1) this.primary = true;
+			//@todo fazer isto ao WS
 			return contactServer;
+		}
 		else throw new RemoteException("Couldn't conecto to contact server");
 	}
 	
@@ -181,6 +186,14 @@ public class FileServer
 				
 		else
 			throw new InfoNotFoundException( "Path not found :" + path);
+	}
+
+	@Override
+	public boolean setAsPrimary()
+	{
+		System.out.println("Set this as primary server");
+		this.primary = true;
+		return true;
 	}
 
 	public FileContent getFileContent(String path) throws RemoteException, InfoNotFoundException, IOException 
