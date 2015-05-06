@@ -62,6 +62,7 @@ public class ContactServer
 	{
 		
 		List<String> result = this.fileServers.get(name);
+		result.set(0, result.get(0) + " (primary)");
 
 		if(result != null) {
 			return result.toArray(new String[result.size()]);
@@ -120,33 +121,45 @@ public class ContactServer
 
 	//@Override
 	private int addServer(String name, String ip, String protocol) {
+
 		List<String> ips = new CopyOnWriteArrayList<String>();
+		try {
 
-		String url = buildUrl(ip, name, protocol);
-		//System.out.println(url);
+			String url = buildUrl(ip, name, protocol);
+			//System.out.println(url);
 
-		if(this.fileServers.containsKey(name))
-		{
-			ips = this.fileServers.get(name);
-
-			if(!ips.contains(url))
+			if(this.fileServers.containsKey(name))
 			{
-				ips.add(url);
+				ips = this.fileServers.get(name);
 
+				if(!ips.contains(url))
+				{
+					ips.add(url);
+
+					this.fileServers.put(name, ips);
+					System.out.println("Added server ip: " + ip + " to servename: " + name);
+				}
+			} else {
+				ips.add(url);
 				this.fileServers.put(name, ips);
 				System.out.println("Added server ip: " + ip + " to servename: " + name);
+
+				if(setServerAsPrimary(url))
+					System.out.println("Set success");
+				else
+					System.out.println("An error occured");
 			}
-		} else {
-			ips.add(url);
-			this.fileServers.put(name, ips);
-			System.out.println("Added server ip: " + ip + " to servename: " + name);
+
+			Date date = new Date();
+			this.timetable.put(url, new Timestamp(date.getTime()));
+			System.out.println("Added timetable to server: " + name + "@" + ip + ": " + this.timetable.get(name + "@" + ip));
+
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
 		}
-
-		Date date = new Date();
-		this.timetable.put(url, new Timestamp(date.getTime()));
-		System.out.println("Added timetable to server: " + name + "@" + ip + ": " + this.timetable.get(name + "@" + ip));
-
+		
 		return ips.size();
+
 	}
 
 	private boolean serverExists(String name, String ip, String protocol) {
@@ -210,9 +223,7 @@ public class ContactServer
 			}
 			else
 			{
-				System.out.println("is rmiiii: "+url);
 				IFileServer rmiServer = (IFileServer) Naming.lookup(url);
-				System.out.println("deuu");
 				return rmiServer.setAsPrimary();
 			}
 		}
