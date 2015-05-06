@@ -191,8 +191,9 @@ public class FileServer
 	@Override
 	public boolean setAsPrimary()
 	{
-		System.out.println("Set as primary server");
-		return this.primary = true;
+		System.out.println("Set this as primary server");
+		this.primary = true;
+		return true;
 	}
 
 	public FileContent getFileContent(String path) throws RemoteException, InfoNotFoundException, IOException 

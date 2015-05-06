@@ -8,6 +8,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.sql.Timestamp;
 import java.io.*;
 
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import javax.xml.namespace.QName;
+import ws.FileServerWSService;
+
 public class ContactServer
 		extends UnicastRemoteObject
 		implements IContactServer, Runnable
@@ -179,7 +185,10 @@ public class ContactServer
 				else if (is_primary)
 				{
 					System.out.println("Set "+ips.get(0)+" as primary");
-					setServerAsPrimary(ips.get(0));
+					if(setServerAsPrimary(ips.get(0)))
+						System.out.println("Set success");
+					else
+						System.out.println("An error occured");
 				}
 			}
 		} catch(Exception e) {
@@ -189,12 +198,29 @@ public class ContactServer
 
 
 
-	private void setServerAsPrimary(String url) throws Exception {
+	private boolean setServerAsPrimary(String url) throws Exception {
 
-		IFileServer fServer = (IFileServer) Naming.lookup(url);
-		if(fServer.setAsPrimary() != true) throw new Exception("Cannot set '"+url+"' as primary");
-		//return fServer;
-
+		try
+		{	
+			if(url.startsWith("http"))
+			{
+				FileServerWSService service = new FileServerWSService( new URL(url), new QName("http://ws.srv/", "FileServerWSService"));
+				ws.FileServerWS wsServer = service.getFileServerWSPort();
+				return wsServer.setAsPrimary();
+			}
+			else
+			{
+				System.out.println("is rmiiii: "+url);
+				IFileServer rmiServer = (IFileServer) Naming.lookup(url);
+				System.out.println("deuu");
+				return rmiServer.setAsPrimary();
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.getMessage());
+			return false;
+		}
 	}
 
 	private void checkServerStatus(){

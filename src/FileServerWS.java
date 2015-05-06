@@ -179,6 +179,15 @@ public class FileServerWS implements Runnable
 	}
 
 
+
+	@WebMethod
+	public boolean setAsPrimary()
+	{
+		System.out.println("Set this as primary server");
+		this.primary = true;
+		return true;
+	}
+
 	public FileContent getFileContent(String path) throws InfoNotFoundException, IOException 
 	{		
 		System.out.println("Pedido de 'File Content' do cliente " + checkClientHost());
