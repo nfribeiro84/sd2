@@ -32,6 +32,8 @@ public class DropboxServer
 	private static final String SCOPE = "dropbox";		//""
 	private static final String AUTHORIZE_URL = "https://www.dropbox.com/1/oauth/authorize?oauth_token=";
 	private Token accessToken;
+	private OAuthService service;
+	private String baseUrl = "https://api.dropbox.com/1/";
 
 
 	private String basePathName;
@@ -51,12 +53,13 @@ public class DropboxServer
 		this.contactServerURL = "rmi://" + url;
 		this.fileServerName = name;
 		this.protocol = "rmi";
+		this.primary = false;
 	}
 
 	private boolean connectToDropbox()
 	{
 		try {
-			OAuthService service = new ServiceBuilder().provider(DropBoxApi.class).apiKey(API_KEY)
+			this.service = new ServiceBuilder().provider(DropBoxApi.class).apiKey(API_KEY)
 					.apiSecret(API_SECRET).scope(SCOPE).build();
 			Scanner in = new Scanner(System.in);
 
@@ -75,27 +78,9 @@ public class DropboxServer
 			// Com esses sistemas a linha abaixo esta a mais
 			verifier = new Verifier(requestToken.getSecret());
 			// Obter access token
-			this.accessToken = service.getAccessToken(requestToken, verifier);
-			
+			this.accessToken = this.service.getAccessToken(requestToken, verifier);
+
 			return true;
-			/*	
-			// Obter listagem do directorio raiz
-			OAuthRequest request = new OAuthRequest(Verb.GET, "https://api.dropbox.com/1/metadata/dropbox/?list=true");
-			service.signRequest(accessToken, request);
-			Response response = request.send();
-
-			if (response.getCode() != 200)
-				throw new RuntimeException("Metadata response code:" + response.getCode());
-			/*
-			JSONParser parser = new JSONParser();
-			JSONObject res = (JSONObject) parser.parse(response.getBody());
-
-			JSONArray items = (JSONArray) res.get("contents");
-			Iterator it = items.iterator();
-			while (it.hasNext()) {
-				JSONObject file = (JSONObject) it.next();
-				System.out.println(file.get("path"));
-			}*/
 		} catch (Exception e) 
 		{
 			System.out.println("Ocorreu um erro ao ligar à Dropbox");			e.printStackTrace();
@@ -112,9 +97,14 @@ public class DropboxServer
 	
 	private IContactServer subscribeToContact(IContactServer contactServer) throws Exception
 	{
-		if(contactServer.subscribe(this.fileServerName, this.protocol))
+		int res = contactServer.subscribe(this.fileServerName, this.protocol);
+		if( res != -1)
+		{
+			if (res == 1) this.primary = true;
+			//@todo fazer isto ao WS
 			return contactServer;
-		else throw new RemoteException("Couldn't conecto to contact server");
+		}
+		else throw new RemoteException("Couldn't connect to contact server");
 	}
 	
 	/**
@@ -141,7 +131,13 @@ public class DropboxServer
 		return "OK";
 	}
 	
-	
+	@Override
+	public boolean setAsPrimary()
+	{
+		System.out.println("Set this as primary server");
+		this.primary = true;
+		return true;
+	}
 
 	@Override
 	public String[] dir(String path) throws RemoteException, InfoNotFoundException
@@ -150,14 +146,47 @@ public class DropboxServer
 		{
 			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
 			System.out.println("Pedido 'DIR' do cliente " + client_ip);
+			System.out.println("Para a path "+ path);
 		}
 		catch(ServerNotActiveException e){};
 		
-		File f = new File( basePath, path);
-		if( f.exists())
-			return f.list();
+		String url;
+		if(path.equals("."))
+			url = baseUrl + "metadata/auto/?list=true";
 		else
-			throw new InfoNotFoundException( "Directory not found :" + path);
+			url = baseUrl + "metadata/auto/"+path+"/?list=true";
+
+		OAuthRequest request = new OAuthRequest(Verb.GET, url);
+		this.service.signRequest(this.accessToken, request);
+		Response response = request.send();
+
+		if (response.getCode() != 200)
+			throw new RuntimeException("Metadata response code:" + response.getCode());
+
+		JSONParser parser = new JSONParser();
+		JSONArray items;
+		try
+		{
+			JSONObject res = (JSONObject) parser.parse(response.getBody());
+
+			items = (JSONArray) res.get("contents");	
+		
+		
+		Iterator it = items.iterator();
+		//System.out.println(items.length());
+		String[] result = new String[items.size()];
+		int i=0;
+		while (it.hasNext())
+		{
+			JSONObject file = (JSONObject) it.next();
+			System.out.println(file);
+			result[i] = (String)file.get("path");
+			i++;
+			//System.out.println(file.get("path"));
+		}
+		return result;
+		}
+		catch(Exception e) { return null;}
 	}
 	
 	@Override
