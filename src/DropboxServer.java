@@ -5,6 +5,7 @@ import java.rmi.registry.*;
 import java.util.*;
 import java.io.*;
 import java.lang.Thread;
+import java.awt.Desktop;
 
 //REST
 import org.json.simple.*;
@@ -66,6 +67,10 @@ public class DropboxServer
 			// Obter Request token
 			Token requestToken = service.getRequestToken();
 			
+			Runtime rt = Runtime.getRuntime();
+			String url = AUTHORIZE_URL + requestToken.getToken();
+			rt.exec( "rundll32 url.dll,FileProtocolHandler " + url);
+
 			System.out.println("Tem de aceder ao link indicado para autorizar o servidor a ligar à Dropbox:");
 			System.out.println(AUTHORIZE_URL + requestToken.getToken());
 			System.out.println("Depois de aceder ao link e introduzir as suas credenciais, pressione 'Enter'");
@@ -139,6 +144,39 @@ public class DropboxServer
 		return true;
 	}
 
+	/**
+	* Metodo que verifica se a path indicada corresponde a um directorio ou nao
+	*/
+	private boolean isDir(String path) throws Exception
+	{
+		if(path.endsWith("."))
+			path = path.replace(".","");
+		else
+			if(!path.endsWith("/"))
+				path += "/";
+		
+
+		String url = baseUrl+"metadata/auto/" + path + "?list=false";
+		OAuthRequest request = new OAuthRequest(Verb.GET, url);
+		this.service.signRequest(this.accessToken, request);
+		Response response = request.send();
+
+		if (response.getCode() != 200)
+			throw new RuntimeException("Metadata response code:" + response.getCode());
+
+		try
+		{
+			JSONParser parser = new JSONParser();
+			JSONObject res = (JSONObject) parser.parse(response.getBody());
+			return (boolean)res.get("is_dir");	
+		}
+		catch(Exception e)
+		{
+			throw e;
+		}
+	}
+
+
 	@Override
 	public String[] dir(String path) throws RemoteException, InfoNotFoundException
 	{
@@ -150,12 +188,14 @@ public class DropboxServer
 		}
 		catch(ServerNotActiveException e){};
 		
-		String url;
-		if(path.equals("."))
-			url = baseUrl + "metadata/auto/?list=true";
+		if(path.endsWith("."))
+			path = path.replace(".","");
 		else
-			url = baseUrl + "metadata/auto/"+path+"/?list=true";
+			if(!path.endsWith("/"))
+				path += "/";
 
+		String url = baseUrl+"metadata/auto/" + path + "?list=true";
+		System.out.println(url);
 		OAuthRequest request = new OAuthRequest(Verb.GET, url);
 		this.service.signRequest(this.accessToken, request);
 		Response response = request.send();
@@ -169,22 +209,19 @@ public class DropboxServer
 		{
 			JSONObject res = (JSONObject) parser.parse(response.getBody());
 
-			items = (JSONArray) res.get("contents");	
+			items = (JSONArray) res.get("contents");			
 		
-		
-		Iterator it = items.iterator();
-		//System.out.println(items.length());
-		String[] result = new String[items.size()];
-		int i=0;
-		while (it.hasNext())
-		{
-			JSONObject file = (JSONObject) it.next();
-			System.out.println(file);
-			result[i] = (String)file.get("path");
-			i++;
-			//System.out.println(file.get("path"));
-		}
-		return result;
+			Iterator it = items.iterator();
+			//System.out.println(items.length());
+			String[] result = new String[items.size()];
+			int i=0;
+			while (it.hasNext())
+			{
+				JSONObject file = (JSONObject) it.next();
+				result[i] = (String)file.get("path");
+				i++;
+			}
+			return result;
 		}
 		catch(Exception e) { return null;}
 	}
@@ -198,15 +235,19 @@ public class DropboxServer
 			System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
 		}
 		catch(ServerNotActiveException e){};
-		File directorio = new File(basePath, dir);
-		if(!directorio.exists())
-			try
-			{
-				return directorio.mkdir();
-			}
-			catch(SecurityException e){return false;};
-		
-		return false;
+
+		String url = baseUrl + "fileops/create_folder";
+
+		OAuthRequest request = new OAuthRequest(Verb.POST, url);
+		request.addBodyParameter("root", "auto");
+		request.addBodyParameter("path", dir);
+		this.service.signRequest(this.accessToken, request);
+		Response response = request.send();
+
+		if (response.getCode() != 200)
+			return false;
+
+		return true;
 	}
 	
 	@Override
@@ -218,21 +259,74 @@ public class DropboxServer
 			System.out.println("Pedido 'Remove DIR' do cliente " + client_ip);
 		}
 		catch(ServerNotActiveException e){};
-		File directorio = new File(basePath, dir);
-		String[] children = directorio.list();
-		for(String child : children)
+		
+		String url = baseUrl + "fileops/delete";
+		try
+		{
+			if(this.isDir(dir))
+			{
+				OAuthRequest request = new OAuthRequest(Verb.POST, url);
+				request.addBodyParameter("root", "auto");
+				request.addBodyParameter("path", dir);
+				this.service.signRequest(this.accessToken, request);
+				Response response = request.send();
+
+				if (response.getCode() != 200)
+					return false;
+
+				return true;	
+			}
+			else
+			{
+				System.out.println("Not a directory");
+				return false;
+			}
+				
+		}
+		catch(Exception e)
+		{
 			return false;
-		return directorio.delete();
+		}
+		
 	}
 	
 	@Override
 	public boolean rmfile(String path) throws RemoteException
 	{
-		System.out.println("Pedido 'Remove File' do cliente " + checkClientHost());
-		File ficheiro = new File(basePath, path);
-		if(ficheiro.isFile())
-			return ficheiro.delete();
-		else return false;
+		try
+		{
+			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
+			System.out.println("Pedido 'Remove File' do cliente " + client_ip);
+		}
+		catch(ServerNotActiveException e){};
+		
+		String url = baseUrl + "fileops/delete";
+		try
+		{
+			if(!this.isDir(path))
+			{
+				OAuthRequest request = new OAuthRequest(Verb.POST, url);
+				request.addBodyParameter("root", "auto");
+				request.addBodyParameter("path", path);
+				this.service.signRequest(this.accessToken, request);
+				Response response = request.send();
+
+				if (response.getCode() != 200)
+					return false;
+
+				return true;	
+			}
+			else
+			{
+				System.out.println("Not a file");
+				return false;
+			}
+				
+		}
+		catch(Exception e)
+		{
+			return false;
+		}
 	}
 	
 	@Override
