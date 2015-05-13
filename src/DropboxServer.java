@@ -329,6 +329,7 @@ public class DropboxServer
 		}
 	}
 	
+	// TO DO
 	@Override
 	public boolean cp(String source, String dest) throws RemoteException, IOException
 	{
@@ -354,24 +355,47 @@ public class DropboxServer
 	@Override
 	public FileInfo getFileInfo(String path) throws RemoteException, InfoNotFoundException 
 	{
-		System.out.println("Pedido de 'File Info' do cliente " + checkClientHost());
-		File element = new File( basePath, path);
-		if( element.exists())
-			if(element.isFile())
-				return new FileInfo(element.getName(), element.length(), new Date(element.lastModified()), element.isFile(), 0, 0);
-			else
+		try
+		{
+			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
+			System.out.println("Pedido 'Get File Info' do cliente " + client_ip);
+			System.out.println("Para o ficheiro " + path);
+		}
+		catch(ServerNotActiveException e){};
+
+		String url = baseUrl+"metadata/auto/" + path + "?list=false";
+		OAuthRequest request = new OAuthRequest(Verb.GET, url);
+		this.service.signRequest(this.accessToken, request);
+		Response response = request.send();
+		if(response.getCode() == 404)
+			throw new InfoNotFoundException("File "+ path + " not found");
+		else
+			if (response.getCode() != 200)
+				throw new RuntimeException("Metadata response code:" + response.getCode());
+
+		JSONParser parser = new JSONParser();
+		try
+		{
+			JSONObject file = (JSONObject) parser.parse(response.getBody());
+			boolean isFile = !(boolean)file.get("is_dir");
+			if(!isFile)
 			{
-				int directories = 0;
-				int files = 0;				
-				for(String child : element.list())
-					if(new File(element,child).isDirectory())
-						directories++;
-					else files++;
-				return new FileInfo(element.getName(), 0, new Date(element.lastModified()), element.isFile(), directories, files);
+				System.out.println("O path " + path + "não corresponde a um ficheiro");
+				throw new InfoNotFoundException("O path " + path + "não corresponde a um ficheiro");
 			}
 				
-		else
-			throw new InfoNotFoundException( "Path not found :" + path);
+			String name = (String) file.get("path");
+			int index = name.lastIndexOf("/");
+			if(index > -1);
+				name = name.substring(index+1);
+			Date dt = new Date((String)file.get("modified"));
+			return new FileInfo(name, (long)file.get("bytes"), dt, isFile, 0, 0);
+		}
+		catch(Exception e)
+		{
+			return null;
+		}
+
 	}
 
 	public FileContent getFileContent(String path) throws RemoteException, InfoNotFoundException, IOException 
@@ -423,6 +447,7 @@ public class DropboxServer
 	}
 
 
+	
 
 	@Override
 	public void run()	{
