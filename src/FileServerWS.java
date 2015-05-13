@@ -188,6 +188,16 @@ public class FileServerWS implements Runnable
 		return true;
 	}
 
+
+	@WebMethod
+	public boolean syncWith(String url)
+	{
+		//	@TODO
+		System.out.println("Start sync with: " + url);
+
+		return false;
+	}
+
 	public FileContent getFileContent(String path) throws InfoNotFoundException, IOException 
 	{		
 		System.out.println("Pedido de 'File Content' do cliente " + checkClientHost());
@@ -273,7 +283,7 @@ public class FileServerWS implements Runnable
 			FileServerWS server = new FileServerWS(path, url, serverName);
 
 			Endpoint.publish(
-			         "http://localhost:8080/"+serverName,
+			         "http://0.0.0.0:8080/"+serverName,
 			         server);
 			System.out.println( serverName+" started");
 			

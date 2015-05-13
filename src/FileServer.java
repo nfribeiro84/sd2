@@ -6,6 +6,12 @@ import java.util.*;
 import java.io.*;
 import java.lang.Thread;
 
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import javax.xml.namespace.QName;
+import ws.FileServerWSService;
+
 public class FileServer
 		extends UnicastRemoteObject
 		implements IFileServer, Runnable
@@ -25,6 +31,13 @@ public class FileServer
 	private boolean primary;
 
 	private int ping_interval = 3;
+
+	//SYNC VARS
+  private static final String SYNC_PATH = "./sync_dir";
+  
+	private IFileServer rmiServer;
+	private ws.FileServerWS wsServer;
+
 	
 	protected FileServer( String pathname, String url, String name) throws RemoteException 
 	{
@@ -107,12 +120,18 @@ public class FileServer
 		}
 		catch(ServerNotActiveException e){};
 		File directorio = new File(basePath, dir);
-		if(!directorio.exists())
+		
+		if(!directorio.exists()) {
 			try
 			{
 				return directorio.mkdir();
 			}
-			catch(SecurityException e){return false;};
+			catch(SecurityException e){
+				//return false;
+			};
+		}
+
+
 		
 		return false;
 	}
@@ -188,13 +207,8 @@ public class FileServer
 			throw new InfoNotFoundException( "Path not found :" + path);
 	}
 
-	@Override
-	public boolean setAsPrimary()
-	{
-		System.out.println("Set this as primary server");
-		this.primary = true;
-		return true;
-	}
+
+
 
 	public FileContent getFileContent(String path) throws RemoteException, InfoNotFoundException, IOException 
 	{		
@@ -243,6 +257,121 @@ public class FileServer
     }
     return (int) l;
 	}
+
+
+
+
+
+
+
+	/**
+	*		SYNC
+	*
+	*/
+
+
+
+	@Override
+	public boolean setAsPrimary()
+	{
+		System.out.println("Set this as primary server");
+		this.primary = true;
+		return true;
+	}
+
+
+	private FileServerWSService createWsServer(String url) throws Exception {
+		return new FileServerWSService( new URL(url), new QName("http://ws.srv/", "FileServerWSService"));
+	}
+
+
+
+	@Override
+	public boolean syncWith(String url)
+	{
+		System.out.println("Start sync with: " + url + " Oon path: " + SYNC_PATH);
+		try {
+			//	@TODO
+			String[] folders;
+
+			if(url.startsWith("http"))
+			{
+				FileServerWSService service = createWsServer(url);
+				this.wsServer = service.getFileServerWSPort();
+			}
+			else
+			{
+				this.rmiServer = (IFileServer) Naming.lookup(url);
+			}
+
+			//Sync root directory
+			if( syncAllFilesAndFolders( SYNC_PATH ) ) 
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+
+
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+	private boolean syncAllFilesAndFolders(String path) {
+		try {
+			String[] folders;
+
+			if(this.rmiServer == null)
+			{
+				List<String> list = wsServer.dir(path);
+				folders = list.toArray(new String[list.size()]);
+			}
+			else
+			{
+				folders = rmiServer.dir(path);
+			}
+
+
+			if( folders != null) 
+			{
+				System.out.println( folders.length);
+				for( int i = 0; i < folders.length; i++)
+				{
+					System.out.println( folders[i] );
+					String curr_file = path + "/" + folders[i];
+
+					//@TODO
+					//if is dir 
+					//{
+						//if folder doesnt exist create folder
+						//return syncAllFilesAndFolders( curr_file );
+					//}
+					//else
+						//return syncFile( curr_file );
+				}
+				return true;
+			} 
+			else
+			{
+				System.out.println( "Invalid folders array" );
+				return false;
+			}
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+
+
+	/**
+	*		END SYNC
+	*
+	*/
 
 
 

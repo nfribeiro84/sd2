@@ -50,4 +50,11 @@ public interface IFileServer extends Remote
 	*		Create a file in server
 	*/
 	public boolean setAsPrimary() throws RemoteException;
+
+	/**
+	*		Create a file in server
+	*/
+	public boolean syncWith(String url) throws RemoteException;
+
+
 }

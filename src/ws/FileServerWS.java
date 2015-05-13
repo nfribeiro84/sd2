@@ -52,6 +52,21 @@ public interface FileServerWS {
 
     /**
      * 
+     * @param arg0
+     * @return
+     *     returns boolean
+     */
+    @WebMethod
+    @WebResult(targetNamespace = "")
+    @RequestWrapper(localName = "rmdir", targetNamespace = "http://ws.srv/", className = "ws.Rmdir")
+    @ResponseWrapper(localName = "rmdirResponse", targetNamespace = "http://ws.srv/", className = "ws.RmdirResponse")
+    @Action(input = "http://ws.srv/FileServerWS/rmdirRequest", output = "http://ws.srv/FileServerWS/rmdirResponse")
+    public boolean rmdir(
+        @WebParam(name = "arg0", targetNamespace = "")
+        String arg0);
+
+    /**
+     * 
      * @param arg1
      * @param arg0
      * @return
@@ -72,21 +87,6 @@ public interface FileServerWS {
         String arg1)
         throws IOException_Exception
     ;
-
-    /**
-     * 
-     * @param arg0
-     * @return
-     *     returns boolean
-     */
-    @WebMethod
-    @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "rmdir", targetNamespace = "http://ws.srv/", className = "ws.Rmdir")
-    @ResponseWrapper(localName = "rmdirResponse", targetNamespace = "http://ws.srv/", className = "ws.RmdirResponse")
-    @Action(input = "http://ws.srv/FileServerWS/rmdirRequest", output = "http://ws.srv/FileServerWS/rmdirResponse")
-    public boolean rmdir(
-        @WebParam(name = "arg0", targetNamespace = "")
-        String arg0);
 
     /**
      * 
@@ -139,6 +139,21 @@ public interface FileServerWS {
      * 
      * @param arg0
      * @return
+     *     returns boolean
+     */
+    @WebMethod
+    @WebResult(targetNamespace = "")
+    @RequestWrapper(localName = "syncWith", targetNamespace = "http://ws.srv/", className = "ws.SyncWith")
+    @ResponseWrapper(localName = "syncWithResponse", targetNamespace = "http://ws.srv/", className = "ws.SyncWithResponse")
+    @Action(input = "http://ws.srv/FileServerWS/syncWithRequest", output = "http://ws.srv/FileServerWS/syncWithResponse")
+    public boolean syncWith(
+        @WebParam(name = "arg0", targetNamespace = "")
+        String arg0);
+
+    /**
+     * 
+     * @param arg0
+     * @return
      *     returns ws.FileContent
      * @throws IOException_Exception
      * @throws InfoNotFoundException_Exception
@@ -163,8 +178,8 @@ public interface FileServerWS {
      * @param arg0
      * @return
      *     returns boolean
-     * @throws IOException_Exception
      * @throws InfoNotFoundException_Exception
+     * @throws IOException_Exception
      */
     @WebMethod
     @WebResult(targetNamespace = "")
