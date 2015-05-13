@@ -45,6 +45,11 @@ public class ContactServer
 	}
 
 
+	private FileServerWSService createWsServer(String url) throws Exception {
+		return new FileServerWSService( new URL(url), new QName("http://ws.srv/", "FileServerWSService"));
+	}
+
+
 	@Override
 	public String[] servers() throws RemoteException 
 	{
@@ -120,33 +125,52 @@ public class ContactServer
 
 	//@Override
 	private int addServer(String name, String ip, String protocol) {
+
 		List<String> ips = new CopyOnWriteArrayList<String>();
+		try {
 
-		String url = buildUrl(ip, name, protocol);
-		//System.out.println(url);
+			String url = buildUrl(ip, name, protocol);
+			//System.out.println(url);
 
-		if(this.fileServers.containsKey(name))
-		{
-			ips = this.fileServers.get(name);
-
-			if(!ips.contains(url))
+			if(this.fileServers.containsKey(name))
 			{
-				ips.add(url);
+				ips = this.fileServers.get(name);
 
+				if(!ips.contains(url))
+				{
+					ips.add(url);
+
+					this.fileServers.put(name, ips);
+					System.out.println("Added server ip: " + ip + " to servename: " + name);
+
+					// trigger servers sync process
+					if(syncServers(getPrimaryServer(name), url))
+						System.out.println("Sync success");
+					else
+						System.out.println("Sync error occured");					
+				}
+			} else {
+				ips.add(url);
 				this.fileServers.put(name, ips);
 				System.out.println("Added server ip: " + ip + " to servename: " + name);
+
+				if(setServerAsPrimary(url))
+					System.out.println("Set success");
+				else
+					System.out.println("An error occured");
 			}
-		} else {
-			ips.add(url);
-			this.fileServers.put(name, ips);
-			System.out.println("Added server ip: " + ip + " to servename: " + name);
+
+
+			Date date = new Date();
+			this.timetable.put(url, new Timestamp(date.getTime()));
+			System.out.println("Added timetable to server: " + name + "@" + ip + ": " + this.timetable.get(name + "@" + ip));
+
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
 		}
-
-		Date date = new Date();
-		this.timetable.put(url, new Timestamp(date.getTime()));
-		System.out.println("Added timetable to server: " + name + "@" + ip + ": " + this.timetable.get(name + "@" + ip));
-
+		
 		return ips.size();
+
 	}
 
 	private boolean serverExists(String name, String ip, String protocol) {
@@ -198,31 +222,6 @@ public class ContactServer
 
 
 
-	private boolean setServerAsPrimary(String url) throws Exception {
-
-		try
-		{	
-			if(url.startsWith("http"))
-			{
-				FileServerWSService service = new FileServerWSService( new URL(url), new QName("http://ws.srv/", "FileServerWSService"));
-				ws.FileServerWS wsServer = service.getFileServerWSPort();
-				return wsServer.setAsPrimary();
-			}
-			else
-			{
-				System.out.println("is rmiiii: "+url);
-				IFileServer rmiServer = (IFileServer) Naming.lookup(url);
-				System.out.println("deuu");
-				return rmiServer.setAsPrimary();
-			}
-		}
-		catch(Exception e)
-		{
-			System.out.println(e.getMessage());
-			return false;
-		}
-	}
-
 	private void checkServerStatus(){
 		
 		List<String> result = new CopyOnWriteArrayList<String>();
@@ -249,6 +248,69 @@ public class ContactServer
 		
 	}
 
+	/**
+	*
+	*		SYNC
+	*
+	*/
+
+	private boolean setServerAsPrimary(String url) throws Exception {
+
+		try
+		{	
+			if(url.startsWith("http"))
+			{
+				FileServerWSService service = createWsServer(url);
+				ws.FileServerWS wsServer = service.getFileServerWSPort();
+				return wsServer.setAsPrimary();
+			}
+			else
+			{
+				IFileServer rmiServer = (IFileServer) Naming.lookup(url);
+				return rmiServer.setAsPrimary();
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+	public String getPrimaryServer(String name) {
+		List<String> result = this.fileServers.get(name);
+		return result.get(0);
+	}
+
+	public boolean syncServers(String primary, String slave) throws Exception {
+		System.out.println("Syncinn servers " + primary + " and " + slave);
+
+		try
+		{	
+			if(slave.startsWith("http"))
+			{
+				FileServerWSService service = createWsServer(slave);
+				ws.FileServerWS wsServer = service.getFileServerWSPort();
+				return wsServer.syncWith(primary);
+			}
+			else
+			{
+				IFileServer rmiServer = (IFileServer) Naming.lookup(slave);
+				return rmiServer.syncWith(primary);
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+	/**
+	*
+	*		END SYNC
+	*
+	*/
 
 
 

@@ -24,9 +24,11 @@ import javax.xml.namespace.QName;
 @XmlRegistry
 public class ObjectFactory {
 
+    private final static QName _SyncWithResponse_QNAME = new QName("http://ws.srv/", "syncWithResponse");
     private final static QName _GetFileContentResponse_QNAME = new QName("http://ws.srv/", "getFileContentResponse");
     private final static QName _Cp_QNAME = new QName("http://ws.srv/", "cp");
     private final static QName _Dir_QNAME = new QName("http://ws.srv/", "dir");
+    private final static QName _SyncWith_QNAME = new QName("http://ws.srv/", "syncWith");
     private final static QName _GetFileContent_QNAME = new QName("http://ws.srv/", "getFileContent");
     private final static QName _CpResponse_QNAME = new QName("http://ws.srv/", "cpResponse");
     private final static QName _SetAsPrimary_QNAME = new QName("http://ws.srv/", "setAsPrimary");
@@ -159,11 +161,27 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link SyncWithResponse }
+     * 
+     */
+    public SyncWithResponse createSyncWithResponse() {
+        return new SyncWithResponse();
+    }
+
+    /**
      * Create an instance of {@link Cp }
      * 
      */
     public Cp createCp() {
         return new Cp();
+    }
+
+    /**
+     * Create an instance of {@link SyncWith }
+     * 
+     */
+    public SyncWith createSyncWith() {
+        return new SyncWith();
     }
 
     /**
@@ -247,6 +265,15 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link SyncWithResponse }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "syncWithResponse")
+    public JAXBElement<SyncWithResponse> createSyncWithResponse(SyncWithResponse value) {
+        return new JAXBElement<SyncWithResponse>(_SyncWithResponse_QNAME, SyncWithResponse.class, null, value);
+    }
+
+    /**
      * Create an instance of {@link JAXBElement }{@code <}{@link GetFileContentResponse }{@code >}}
      * 
      */
@@ -271,6 +298,15 @@ public class ObjectFactory {
     @XmlElementDecl(namespace = "http://ws.srv/", name = "dir")
     public JAXBElement<Dir> createDir(Dir value) {
         return new JAXBElement<Dir>(_Dir_QNAME, Dir.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link SyncWith }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://ws.srv/", name = "syncWith")
+    public JAXBElement<SyncWith> createSyncWith(SyncWith value) {
+        return new JAXBElement<SyncWith>(_SyncWith_QNAME, SyncWith.class, null, value);
     }
 
     /**
