@@ -17,7 +17,7 @@ import javax.xml.ws.WebServiceFeature;
  * Generated source version: 2.2
  * 
  */
-@WebServiceClient(name = "FileServerWSService", targetNamespace = "http://ws.srv/", wsdlLocation = "http://localhost:8080/FileServerWs?wsdl")
+@WebServiceClient(name = "FileServerWSService", targetNamespace = "http://ws.srv/", wsdlLocation = "http://0.0.0.0:8080/FileServerWs?wsdl")
 public class FileServerWSService
     extends Service
 {
@@ -30,7 +30,7 @@ public class FileServerWSService
         URL url = null;
         WebServiceException e = null;
         try {
-            url = new URL("http://localhost:8080/FileServerWs?wsdl");
+            url = new URL("http://0.0.0.0:8080/FileServerWs?wsdl");
         } catch (MalformedURLException ex) {
             e = new WebServiceException(ex);
         }

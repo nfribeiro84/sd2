@@ -34,6 +34,7 @@ public class FileServer
 
 	//SYNC VARS
   private static final String SYNC_PATH = "./sync_dir";
+  private static final String TMP_FOLDER = "./sync_dir/.tmp";
   
 	private IFileServer rmiServer;
 	private ws.FileServerWS wsServer;
@@ -119,6 +120,14 @@ public class FileServer
 			System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
 		}
 		catch(ServerNotActiveException e){};
+		
+		return createDir( basePath, dir );
+	}
+
+
+
+	private boolean createDir(File basePath, String dir) {
+
 		File directorio = new File(basePath, dir);
 		
 		if(!directorio.exists()) {
@@ -126,15 +135,14 @@ public class FileServer
 			{
 				return directorio.mkdir();
 			}
-			catch(SecurityException e){
-				//return false;
-			};
-		}
-
-
-		
+			catch(SecurityException e){ System.out.println(e.getMessage() );};
+		}	
 		return false;
 	}
+
+
+
+
 	
 	@Override
 	public boolean rmdir(String dir) throws RemoteException
@@ -289,7 +297,7 @@ public class FileServer
 	@Override
 	public boolean syncWith(String url)
 	{
-		System.out.println("Start sync with: " + url + " Oon path: " + SYNC_PATH);
+		System.out.println("Start sync with: " + url + " on path: " + SYNC_PATH);
 		try {
 			//	@TODO
 			String[] folders;
@@ -305,7 +313,7 @@ public class FileServer
 			}
 
 			//Sync root directory
-			if( syncAllFilesAndFolders( SYNC_PATH ) ) 
+			if( this.syncAllFilesAndFolders( SYNC_PATH ) ) 
 			{
 				return true;
 			}
@@ -321,7 +329,47 @@ public class FileServer
 		}
 	}
 
+	private boolean isFile(String path)
+	{
+		try {
+			if(rmiServer == null) {
+				ws.FileInfo info = wsServer.getFileInfo(path);
+				return info.isIsFile();
+			}
+			else
+			{
+				FileInfo info = rmiServer.getFileInfo(path);
+				return info.isFile;
+			}
+		} catch(Exception e) {
+			e.getMessage();
+			return true;
+		}
+	}
+
+	private byte[] getRemoteFileContent( String file ) {
+		try
+			{
+				if(rmiServer == null)
+				{
+					ws.FileContent content = wsServer.getFileContent( file );
+					return content.getContent();
+				}
+				else
+				{
+					FileContent content = rmiServer.getFileContent( file );
+					return content.content;
+				}
+			}
+			catch(Exception e)
+			{
+				System.out.println("Exception in 'CP fromServer': "+e.getMessage());
+				return new byte[0];
+			}			
+	}
+
 	private boolean syncAllFilesAndFolders(String path) {
+			//System.out.println("entraaaa");
 		try {
 			String[] folders;
 
@@ -338,20 +386,37 @@ public class FileServer
 
 			if( folders != null) 
 			{
-				System.out.println( folders.length);
+				//System.out.println( folders.length + " " +path);
 				for( int i = 0; i < folders.length; i++)
 				{
-					System.out.println( folders[i] );
-					String curr_file = path + "/" + folders[i];
+					//System.out.println( folders[i] );
+					String abs_path = path + "/" + folders[i];
+					//System.out.println(isFile(abs_path));
 
-					//@TODO
-					//if is dir 
-					//{
-						//if folder doesnt exist create folder
-						//return syncAllFilesAndFolders( curr_file );
-					//}
-					//else
-						//return syncFile( curr_file );
+					if( !isFile(abs_path) ) 
+					{
+						createDir(new File( path ), folders[i] );
+						syncAllFilesAndFolders(abs_path);
+					}
+					else
+					{
+						System.out.println(abs_path);
+						//System.out.println( getRemoteFileContent(abs_path) );
+    				OutputStream os = null;
+
+						try {
+							byte[] content = getRemoteFileContent( abs_path );
+			        
+			        //os = new FileOutputStream(abs_path);
+			        os = new FileOutputStream("/Users/kae/Documents/workspace/eclipse-projects/fct/sd/sd2/sync_dir/.tmp/" + folders[i]);
+			        int length;
+			        
+	            os.write(content);
+			        
+				    } finally {
+			        os.close();
+				    }
+					}
 				}
 				return true;
 			} 

@@ -2,7 +2,7 @@
 Trabalho Prático 1 de Sistemas Distribuídos
 
 # File servers (from root dir)
-java -cp ./bin/ FileServerWS . localhost/myContactServer FileServerWs
+java -cp ./bin/ FileServerWS . localhost/myContactServer FileServer
 java -cp ./bin/ FileServer . localhost/myContactServer FileServer
 
 # Contact server (from root dir)
