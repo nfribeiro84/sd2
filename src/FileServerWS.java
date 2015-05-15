@@ -1,6 +1,7 @@
 
 import java.io.*;
-import java.util.Date;
+import java.util.*;
+//import java.util.Date;
 
 import javax.jws.*;
 import javax.xml.ws.Endpoint;
@@ -8,6 +9,12 @@ import javax.xml.ws.Endpoint;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.rmi.registry.*;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import javax.xml.namespace.QName;
+import ws.FileServerWSService;
+
 
 //import ws.FileContent;
 
@@ -27,6 +34,15 @@ public class FileServerWS implements Runnable
 	private boolean primary;
 
 	private int ping_interval = 3;
+
+	//SYNC VARS
+  private static final String SYNC_PATH = "./sync_dir";
+  private static final String TMP_FOLDER = "./sync_dir/.tmp";
+  
+	private IFileServer rmiServer;
+	private ws.FileServerWS wsServer;
+
+
 
 	public FileServerWS() {
 		basePath = new File(".");
@@ -92,19 +108,32 @@ public class FileServerWS implements Runnable
 	@WebMethod
 	public boolean mkdir(String dir) 
 	{
-		String client_ip = checkClientHost();	
-		System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
+		try
+		{
+			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
+			System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
+		}
+		catch(ServerNotActiveException e){};
+
+		return createDir( basePath, dir );
+	}
+
+
+
+	private boolean createDir(File basePath, String dir) {
 
 		File directorio = new File(basePath, dir);
-		if(!directorio.exists())
+		
+		if(!directorio.exists()) {
 			try
 			{
 				return directorio.mkdir();
 			}
-			catch(SecurityException e){return false;};
-		
+			catch(SecurityException e){ System.out.println(e.getMessage() );};
+		}	
 		return false;
 	}
+
 
 	
 	@WebMethod
@@ -180,6 +209,17 @@ public class FileServerWS implements Runnable
 
 
 
+
+
+
+
+	/**
+	*		SYNC
+	*
+	*/
+
+
+
 	@WebMethod
 	public boolean setAsPrimary()
 	{
@@ -189,14 +229,169 @@ public class FileServerWS implements Runnable
 	}
 
 
+	private FileServerWSService createWsServer(String url) throws Exception {
+		return new FileServerWSService( new URL(url), new QName("http://ws.srv/", "FileServerWSService"));
+	}
+
+
 	@WebMethod
 	public boolean syncWith(String url)
 	{
-		//	@TODO
-		System.out.println("Start sync with: " + url);
+		System.out.println("Start sync with: " + url + " on path: " + SYNC_PATH);
+		try {
+			//	@TODO
+			String[] folders;
 
-		return false;
+			if(url.startsWith("http"))
+			{
+				FileServerWSService service = createWsServer(url);
+				this.wsServer = service.getFileServerWSPort();
+			}
+			else
+			{
+				this.rmiServer = (IFileServer) Naming.lookup(url);
+			}
+
+			//Sync root directory
+			if( this.syncAllFilesAndFolders( SYNC_PATH ) ) 
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+
+
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			return false;
+		}
 	}
+
+	private boolean isFile(String path)
+	{
+		try {
+			if(rmiServer == null) {
+				ws.FileInfo info = wsServer.getFileInfo(path);
+				return info.isIsFile();
+			}
+			else
+			{
+				FileInfo info = rmiServer.getFileInfo(path);
+				return info.isFile;
+			}
+		} catch(Exception e) {
+			e.getMessage();
+			return true;
+		}
+	}
+
+	private byte[] getRemoteFileContent( String file ) {
+		try
+			{
+				if(rmiServer == null)
+				{
+					ws.FileContent content = wsServer.getFileContent( file );
+					return content.getContent();
+				}
+				else
+				{
+					FileContent content = rmiServer.getFileContent( file );
+					return content.content;
+				}
+			}
+			catch(Exception e)
+			{
+				System.out.println("Exception in 'CP fromServer': "+e.getMessage());
+				return new byte[0];
+			}			
+	}
+
+	private boolean syncFile(String basePath, String file) 
+	{
+		try {
+
+			OutputStream os = null;
+
+			try {
+				byte[] content = getRemoteFileContent( basePath + "/" + file );
+        
+        //os = new FileOutputStream(abs_path);
+        os = new FileOutputStream("/Users/kae/Documents/workspace/eclipse-projects/fct/sd/sd2/sync_dir/.tmp/" + file);
+        
+        os.write(content);
+        
+	    } finally {
+        os.close();
+        return true;
+	    }
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+	private boolean syncAllFilesAndFolders(String path) {
+			//System.out.println("entraaaa");
+		try {
+			String[] folders;
+
+			if(this.rmiServer == null)
+			{
+				List<String> list = wsServer.dir(path);
+				folders = list.toArray(new String[list.size()]);
+			}
+			else
+			{
+				folders = rmiServer.dir(path);
+			}
+
+
+			if( folders != null) 
+			{
+				//System.out.println( folders.length + " " +path);
+				for( int i = 0; i < folders.length; i++)
+				{
+					//System.out.println( folders[i] );
+					String abs_path = path + "/" + folders[i];
+					//System.out.println(isFile(abs_path));
+
+					if( !isFile(abs_path) ) 
+					{
+						createDir(new File( path ), folders[i] );
+						syncAllFilesAndFolders(abs_path);
+					}
+					else
+					{
+    				if( syncFile( path, folders[i] ) ) {
+  						System.out.println("Synchronized file: " + abs_path);
+    				} else {
+    					System.out.println("Couldn't sync file: " + abs_path);
+    				}
+					}
+				}
+				return true;
+			} 
+			else
+			{
+				System.out.println( "Invalid folders array" );
+				return false;
+			}
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+
+
+
+
+	/**
+	*			END SYNC
+	*
+	*/
 
 	public FileContent getFileContent(String path) throws InfoNotFoundException, IOException 
 	{		
