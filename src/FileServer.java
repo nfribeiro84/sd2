@@ -368,6 +368,30 @@ public class FileServer
 			}			
 	}
 
+	private boolean syncFile(String basePath, String file) 
+	{
+		try {
+
+			OutputStream os = null;
+
+			try {
+				byte[] content = getRemoteFileContent( basePath + "/" + file );
+        
+        //os = new FileOutputStream(abs_path);
+        os = new FileOutputStream("/Users/kae/Documents/workspace/eclipse-projects/fct/sd/sd2/sync_dir/.tmp/" + file);
+        
+        os.write(content);
+        
+	    } finally {
+        os.close();
+        return true;
+	    }
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
 	private boolean syncAllFilesAndFolders(String path) {
 			//System.out.println("entraaaa");
 		try {
@@ -400,22 +424,11 @@ public class FileServer
 					}
 					else
 					{
-						System.out.println(abs_path);
-						//System.out.println( getRemoteFileContent(abs_path) );
-    				OutputStream os = null;
-
-						try {
-							byte[] content = getRemoteFileContent( abs_path );
-			        
-			        //os = new FileOutputStream(abs_path);
-			        os = new FileOutputStream("/Users/kae/Documents/workspace/eclipse-projects/fct/sd/sd2/sync_dir/.tmp/" + folders[i]);
-			        int length;
-			        
-	            os.write(content);
-			        
-				    } finally {
-			        os.close();
-				    }
+    				if( syncFile( path, folders[i] ) ) {
+  						System.out.println("Synchronized file: " + abs_path);
+    				} else {
+    					System.out.println("Couldn't sync file: " + abs_path);
+    				}
 					}
 				}
 				return true;
