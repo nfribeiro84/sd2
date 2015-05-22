@@ -398,7 +398,7 @@ public class DropboxServer
 			if(index > -1);
 				name = name.substring(index+1);
 			Date dt = new Date((String)file.get("modified"));
-			return new FileInfo(name, (long)file.get("bytes"), dt, isFile, 0, 0);
+			return new FileInfo(name, (long)file.get("bytes"), dt, isFile, 0, 0, "");
 		}
 		catch(Exception e)
 		{

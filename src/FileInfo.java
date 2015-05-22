@@ -12,9 +12,10 @@ public class FileInfo implements java.io.Serializable
 	public boolean isFile;
 	public int childrenFiles;
 	public int childrenDirectories;
+	public String md5;
 	
 	
-	public FileInfo( String name, long length, Date modified, boolean isFile, int childrenDirectories, int childrenFiles) 
+	public FileInfo( String name, long length, Date modified, boolean isFile, int childrenDirectories, int childrenFiles, String md5) 
 	{
 		this.name = name;
 		this.length = length;
@@ -22,16 +23,18 @@ public class FileInfo implements java.io.Serializable
 		this.isFile = isFile;
 		this.childrenFiles = childrenFiles;
 		this.childrenDirectories = childrenDirectories;
+		this.md5 = md5;
 	}
 
 	/**
 	*		WS contructor
 	*/
-	public FileInfo( String name, long length, Date modified, boolean isFile) {
+	public FileInfo( String name, long length, Date modified, boolean isFile, String md5) {
 		this.name = name;
 		this.length = length;
 		this.modified = modified;
 		this.isFile = isFile;
+		this.md5 = md5;
 	}
 
 

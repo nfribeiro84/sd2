@@ -12,6 +12,11 @@ import java.net.URL;
 import javax.xml.namespace.QName;
 import ws.FileServerWSService;
 
+//checksum
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 public class FileServer
 		extends UnicastRemoteObject
 		implements IFileServer, Runnable
@@ -195,11 +200,13 @@ public class FileServer
 	@Override
 	public FileInfo getFileInfo(String path) throws RemoteException, InfoNotFoundException 
 	{
-		System.out.println("Pedido de 'File Info' do cliente " + checkClientHost());
+		System.out.println("Pedido de 'File Info' do cliente " + checkClientHost() + " para o ficheiro " + basePath+"/"+path);
 		File element = new File( basePath, path);
+
+
 		if( element.exists())
 			if(element.isFile())
-				return new FileInfo(element.getName(), element.length(), new Date(element.lastModified()), element.isFile(), 0, 0);
+				return new FileInfo(element.getName(), element.length(), new Date(element.lastModified()), element.isFile(), 0, 0, checkSum(basePath+"/"+path));
 			else
 			{
 				int directories = 0;
@@ -208,7 +215,7 @@ public class FileServer
 					if(new File(element,child).isDirectory())
 						directories++;
 					else files++;
-				return new FileInfo(element.getName(), 0, new Date(element.lastModified()), element.isFile(), directories, files);
+				return new FileInfo(element.getName(), 0, new Date(element.lastModified()), element.isFile(), directories, files, checkSum(basePath+"/"+path));
 			}
 				
 		else
@@ -347,6 +354,34 @@ public class FileServer
 		}
 	}
 
+	private boolean isFileSyncable(String path, String file)
+	{
+		try {
+			if(file.startsWith(".")) {
+				System.out.println("Hidden file "+file);
+				return false;
+			}
+
+			String filepath = path + "/" + file;
+			if(rmiServer == null) {
+				ws.FileInfo info = wsServer.getFileInfo(filepath);
+				System.out.println("file "+filepath+" md5: "+info.getMd5());
+				System.out.println(checkSum(filepath));
+				return !info.getMd5().equals( checkSum(filepath) );
+			}
+			else
+			{
+				FileInfo info = rmiServer.getFileInfo(filepath);
+				System.out.println("file "+filepath+" md5: "+info.md5);
+				System.out.println(checkSum(filepath));
+				return !info.md5.equals( checkSum(filepath) );
+			}
+		} catch(Exception e) {
+			e.getMessage();
+			return true;
+		}
+	}
+
 	private byte[] getRemoteFileContent( String file ) {
 		try
 			{
@@ -417,18 +452,20 @@ public class FileServer
 					String abs_path = path + "/" + folders[i];
 					//System.out.println(isFile(abs_path));
 
-					if( !isFile(abs_path) ) 
+					if( !isFile(abs_path) && !folders[i].startsWith(".")) 
 					{
 						createDir(new File( path ), folders[i] );
 						syncAllFilesAndFolders(abs_path);
-					}
-					else
+					} 
+					else if( isFileSyncable(path, folders[i]) ) 
 					{
     				if( syncFile( path, folders[i] ) ) {
   						System.out.println("Synchronized file: " + abs_path);
     				} else {
     					System.out.println("Couldn't sync file: " + abs_path);
     				}
+					} else {
+    					System.out.println("File not synced: " + abs_path);
 					}
 				}
 				return true;
@@ -442,6 +479,34 @@ public class FileServer
 			System.out.println(e.getMessage());
 			return false;
 		}
+	}
+
+
+
+	/*
+	* Calculate checksum of a File using MD5 algorithm
+	*/
+	public static String checkSum(String path){
+	  String checksum = null;
+	  try {
+      FileInputStream fis = new FileInputStream(path);
+      MessageDigest md = MessageDigest.getInstance("MD5");
+    
+      //Using MessageDigest update() method to provide input
+      byte[] buffer = new byte[8192];
+      int numOfBytesRead;
+      while( (numOfBytesRead = fis.read(buffer)) > 0){
+          md.update(buffer, 0, numOfBytesRead);
+      }
+      byte[] hash = md.digest();
+      checksum = new BigInteger(1, hash).toString(16); //don't use this, truncates leading zero
+	  } catch (IOException ex) {
+      System.out.println(ex.getMessage());
+	  } catch (NoSuchAlgorithmException ex) {
+      System.out.println(ex.getMessage());
+	  }
+	    
+	 return checksum;
 	}
 
 

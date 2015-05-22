@@ -237,11 +237,11 @@ public class ContactServer
 				
 				if(date != null	) 
 				{
-					/*System.out.println((now.getTime() - ping_date.getTime())/1000);	
+					//System.out.println((now.getTime() - ping_date.getTime())/1000);	
 					if((now.getTime() - ping_date.getTime())/1000 > this.time_check)
 					{
 						removeServer(name, url);
-					}*/
+					}
 				}
 			}
 		}	

@@ -254,7 +254,7 @@ public class FileClient
 			if(rmiServer == null) {
 				ws.FileInfo info = wsServer.getFileInfo(path);
 
-				return new FileInfo( info.getName(), info.getLength(), toDate( info.getModified()), info.isIsFile(), info.getChildrenDirectories(), info.getChildrenFiles() );
+				return new FileInfo( info.getName(), info.getLength(), toDate( info.getModified()), info.isIsFile(), info.getChildrenDirectories(), info.getChildrenFiles(), info.getMd5() );
 			}
 			else
 				return rmiServer.getFileInfo(path);
