@@ -125,8 +125,14 @@ public class FileServer
 			System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
 		}
 		catch(ServerNotActiveException e){};
-		
-		return createDir( basePath, dir );
+		if(primary)
+			return createDir( basePath, dir );
+		else
+		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
+			return false;
+		}
 	}
 
 
@@ -138,7 +144,22 @@ public class FileServer
 		if(!directorio.exists()) {
 			try
 			{
-				return directorio.mkdir();
+				boolean success = directorio.mkdir();
+				if(success)
+				{
+					try
+					{
+						IContactServer contato = connectToContact();
+						contato.orderSync(this.fileServerName);	
+					}
+					catch(Exception e)
+					{
+						System.out.println("Erro ordering Sync");
+						e.printStackTrace();
+					}
+					
+				}
+					
 			}
 			catch(SecurityException e){ System.out.println(e.getMessage() );};
 		}	
@@ -158,11 +179,22 @@ public class FileServer
 			System.out.println("Pedido 'Remove DIR' do cliente " + client_ip);
 		}
 		catch(ServerNotActiveException e){};
-		File directorio = new File(basePath, dir);
-		String[] children = directorio.list();
-		for(String child : children)
+
+		if(primary)
+		{
+			File directorio = new File(basePath, dir);
+			String[] children = directorio.list();
+			for(String child : children)
+				return false;
+			return directorio.delete();	
+		}
+		else
+		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
 			return false;
-		return directorio.delete();
+		}
+		
 	}
 	
 	@Override
@@ -170,9 +202,18 @@ public class FileServer
 	{
 		System.out.println("Pedido 'Remove File' do cliente " + checkClientHost());
 		File ficheiro = new File(basePath, path);
-		if(ficheiro.isFile())
-			return ficheiro.delete();
-		else return false;
+		if(primary)
+		{
+			if(ficheiro.isFile())
+				return ficheiro.delete();
+			else return false;	
+		}
+		else
+		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
+			return false;
+		}
 	}
 	
 	@Override
@@ -181,20 +222,20 @@ public class FileServer
 		System.out.println("Pedido 'Copy File' do cliente " + checkClientHost());
 
 		InputStream is = null;
-    OutputStream os = null;
-    try {
-        is = new FileInputStream(source);
-        os = new FileOutputStream(dest);
-        byte[] buffer = new byte[1024];
-        int length;
-        while ((length = is.read(buffer)) > 0) {
-            os.write(buffer, 0, length);
-        }
-    } finally {
-        is.close();
-        os.close();
-        return true;
-    }
+	    OutputStream os = null;
+	    try {
+	        is = new FileInputStream(source);
+	        os = new FileOutputStream(dest);
+	        byte[] buffer = new byte[1024];
+	        int length;
+	        while ((length = is.read(buffer)) > 0) {
+	            os.write(buffer, 0, length);
+	        }
+	    } finally {
+	        is.close();
+	        os.close();
+	        return true;
+	    }
 	}
 
 	@Override
@@ -242,26 +283,31 @@ public class FileServer
 			}
 			else
 				throw new InfoNotFoundException( "File not found :" + path);
-
-
 	}
 
 	public boolean createFile(String path, FileContent file) throws RemoteException, InfoNotFoundException, IOException 
 	{		
 		System.out.println("Pedido de 'Create file' do cliente " + checkClientHost());
+		if(primary)
+		{			
+		    try {
+		      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
 
-    try {
-      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
+		      raf.write(file.content);
 
-      raf.write(file.content);
-
-      raf.close();
-    } catch(Exception e) {
-    	System.out.println("erro:"+e.getMessage());
-    	throw new IOException(e.getMessage());
-    }
-    return true;
-
+		      raf.close();
+		    } catch(Exception e) {
+		    	System.out.println("erro:"+e.getMessage());
+		    	throw new IOException(e.getMessage());
+		    }
+			return true;
+		}
+		else
+		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
+			return false;
+		}
 
 	}
 
