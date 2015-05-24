@@ -197,12 +197,12 @@ public class ContactServer
 				
 				ips.remove(url);
 				
+					Naming.unbind(name);
 				if (ips.size() == 0) {
 					//remove o ip do nome do servidor correpondente
 					this.fileServers.remove(name);
 
 					//unbind server name from registry
-					Naming.unbind(name);
 
 					System.out.println("Removed servename: " + name);
 				}
