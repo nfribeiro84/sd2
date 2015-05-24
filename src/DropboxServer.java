@@ -86,8 +86,32 @@ public class DropboxServer
 			
 			Runtime rt = Runtime.getRuntime();
 			String url = AUTHORIZE_URL + requestToken.getToken();
-			rt.exec( "rundll32 url.dll,FileProtocolHandler " + url);
 
+			String os = System.getProperty("os.name").toLowerCase();
+        
+			try
+			{
+ 
+	    		if (os.indexOf( "win" ) >= 0) 
+	    			rt.exec( "rundll32 url.dll,FileProtocolHandler " + url);
+ 
+	    		else 
+	    			if (os.indexOf( "mac" ) >= 0)
+	        			rt.exec( "open " + url);
+ 
+	            	else 
+	            		throw new Exception();
+	        }
+	        catch(Exception e)
+	        {
+	        	System.out.println("Can't open a browser");
+	        }
+
+	        /*
+
+			if(System.getProperty("os.name").startsWith("Windows"))
+				rt.exec( "rundll32 url.dll,FileProtocolHandler " + url);
+*/
 			System.out.println("Tem de aceder ao link indicado para autorizar o servidor a ligar à Dropbox:");
 			System.out.println(AUTHORIZE_URL + requestToken.getToken());
 			System.out.println("Depois de aceder ao link e introduzir as suas credenciais, pressione 'Enter'");
@@ -102,7 +126,7 @@ public class DropboxServer
 			// Obter access token
 			this.accessToken = this.service.getAccessToken(requestToken, verifier);
 
-			System.out.println(System.getProperty("os.name"));
+			//System.out.println(System.getProperty("os.name"));
 			
 			return true;
 		} catch (Exception e) 
