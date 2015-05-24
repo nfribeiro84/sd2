@@ -24,6 +24,9 @@ import org.scribe.oauth.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.math.BigInteger;
+import java.security.SecureRandom;
+
 
 
 public class DropboxServer
@@ -99,6 +102,8 @@ public class DropboxServer
 			// Obter access token
 			this.accessToken = this.service.getAccessToken(requestToken, verifier);
 
+			System.out.println(System.getProperty("os.name"));
+			
 			return true;
 		} catch (Exception e) 
 		{
@@ -416,7 +421,7 @@ public class DropboxServer
 				System.out.println("childrenFiles: " + childrenFiles);
 			}
 
-			return new FileInfo(name, (long)file.get("bytes"), dt, !isDir, childrenDirectories, childrenFiles, checkSum(basePath+"/"+path));			
+			return new FileInfo(name, (long)file.get("bytes"), dt, !isDir, childrenDirectories, childrenFiles, (String)file.get("rev"));			
 		}
 		catch(Exception e)
 		{			
@@ -502,7 +507,13 @@ public class DropboxServer
 
 		try
 		{
-			String url = "https://api-content.dropbox.com/1/files_put/auto/" + path+"?locale=English";
+			String tmp_path = writeTmpFile(file.content);
+
+			String url = "https://api-content.dropbox.com/1/files_put/auto/" + path+"?locale=English&parent_rev="+checkSum(tmp_path);
+			
+			//deletes tmp file
+			//deleteFile(tmp_path);
+
 			OAuthRequest request = new OAuthRequest(Verb.PUT, url);
 			this.service.signRequest(this.accessToken, request);
 			request.addHeader("Content-Length", Long.toString(file.length));
@@ -642,6 +653,42 @@ public class DropboxServer
 			return false;
 		}
 	}
+
+
+	private static String writeTmpFile(byte[] content)
+	{
+		try {
+			String base = "./syn_dir/.tmp/";
+			SecureRandom random = new SecureRandom();
+
+			String path = new BigInteger(130, random).toString(32);
+			System.out.println("new tmp file created"+path);
+			RandomAccessFile raf = new RandomAccessFile(base+path, "rw");
+
+	    raf.write(content);
+
+	    raf.close();
+
+	    return path;
+
+		} catch(Exception e) {
+			e.printStackTrace();
+			return "";
+		}
+	}
+	
+
+	private static boolean deleteFile(String path)
+	{
+		try {
+			File ficheiro = new File(path);
+			return ficheiro.delete();
+		} catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 
 
 
