@@ -336,6 +336,7 @@ public class FileServer
 		}
 	}
 
+	// is remote path a file
 	private boolean isFile(String path)
 	{
 		try {
@@ -384,23 +385,23 @@ public class FileServer
 
 	private byte[] getRemoteFileContent( String file ) {
 		try
+		{
+			if(rmiServer == null)
 			{
-				if(rmiServer == null)
-				{
-					ws.FileContent content = wsServer.getFileContent( file );
-					return content.getContent();
-				}
-				else
-				{
-					FileContent content = rmiServer.getFileContent( file );
-					return content.content;
-				}
+				ws.FileContent content = wsServer.getFileContent( file );
+				return content.getContent();
 			}
-			catch(Exception e)
+			else
 			{
-				System.out.println("Exception in 'CP fromServer': "+e.getMessage());
-				return new byte[0];
-			}			
+				FileContent content = rmiServer.getFileContent( file );
+				return content.content;
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println("Exception in 'CP fromServer': "+e.getMessage());
+			return new byte[0];
+		}			
 	}
 
 	private boolean syncFile(String base, String file) 

@@ -27,6 +27,8 @@ import java.security.NoSuchAlgorithmException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
+import javax.xml.datatype.XMLGregorianCalendar;
+
 
 
 public class DropboxServer
@@ -50,7 +52,7 @@ public class DropboxServer
 	private String baseUrl = "https://api.dropbox.com/1/";
 
 	//SYNC VARS
-  	private static final String SYNC_PATH = "./sync_dir";
+  	private static final String SYNC_PATH = "sync_dir";
 	private IFileServer rmiServer;
 	private ws.FileServerWS wsServer;
 
@@ -60,6 +62,8 @@ public class DropboxServer
 	private String fileServerName;
 	private String protocol;
 	private boolean primary;
+	private boolean verified;
+	private String serverToSync;
 
 	private int ping_interval = 3;
 	
@@ -72,6 +76,7 @@ public class DropboxServer
 		this.fileServerName = name;
 		this.protocol = "rmi";
 		this.primary = false;
+		this.verified = false;
 	}
 
 	private boolean connectToDropbox()
@@ -117,6 +122,8 @@ public class DropboxServer
 			System.out.println("Depois de aceder ao link e introduzir as suas credenciais, pressione 'Enter'");
 			System.out.print(">>");
 			Verifier verifier = new Verifier(in.nextLine());
+			this.verified = true;
+
 
 			// O Dropbox usa como verifier o mesmo segredo do request token, ao
 			// contrario de outros
@@ -128,6 +135,10 @@ public class DropboxServer
 
 			//System.out.println(System.getProperty("os.name"));
 			
+			System.out.println("----> sync with: "+this.serverToSync);
+			if(this.serverToSync != null)
+				syncServer(this.serverToSync);
+
 			return true;
 		} catch (Exception e) 
 		{
@@ -177,14 +188,6 @@ public class DropboxServer
 	public String pong()
 	{
 		return "OK";
-	}
-	
-	@Override
-	public boolean setAsPrimary()
-	{
-		System.out.println("Set this as primary server");
-		this.primary = true;
-		return true;
 	}
 
 	/**
@@ -531,12 +534,9 @@ public class DropboxServer
 
 		try
 		{
-			String tmp_path = writeTmpFile(file.content);
 
-			String url = "https://api-content.dropbox.com/1/files_put/auto/" + path+"?locale=English&parent_rev="+checkSum(tmp_path);
-			
-			//deletes tmp file
-			//deleteFile(tmp_path);
+			String url = "https://api-content.dropbox.com/1/files_put/auto/" + path+"?locale=English";
+		
 
 			OAuthRequest request = new OAuthRequest(Verb.PUT, url);
 			this.service.signRequest(this.accessToken, request);
@@ -597,11 +597,33 @@ public class DropboxServer
 	}
 
 
+	
+	@Override
+	public boolean setAsPrimary()
+	{
+		System.out.println("Set this as primary server");
+		this.primary = true;
+		return true;
+	}
+
+
 
 	@Override
 	public boolean syncWith(String url)
 	{
-		System.out.println("Start sync with: " + url + " Oon path: " + SYNC_PATH);
+		try {
+			this.serverToSync = url;
+			return true;
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+	//Override
+	public boolean syncServer(String url)
+	{
+		System.out.println("Start sync with: " + url + " on path: " + SYNC_PATH);
 		try {
 			//	@TODO
 			String[] folders;
@@ -617,7 +639,7 @@ public class DropboxServer
 			}
 
 			//Sync root directory
-			if( syncAllFilesAndFolders( SYNC_PATH ) ) 
+			if( this.syncAllFilesAndFolders( SYNC_PATH ) ) 
 			{
 				return true;
 			}
@@ -633,7 +655,104 @@ public class DropboxServer
 		}
 	}
 
+	// is remote path a file
+	private boolean isFile(String path)
+	{
+		try {
+			if(rmiServer == null) {
+				ws.FileInfo info = wsServer.getFileInfo(path);
+				return info.isIsFile();
+			}
+			else
+			{
+				FileInfo info = rmiServer.getFileInfo(path);
+				return info.isFile;
+			}
+		} catch(Exception e) {
+			e.getMessage();
+			return true;
+		}
+	}
+
+
+
+	private boolean isFileSyncable(String path, String file)
+	{
+		try {
+			if(file.startsWith(".")) {
+				System.out.println("Hidden file "+file);
+				return false;
+			}
+
+			String filepath = path + "/" + file;
+			FileInfo local_file = getFileInfo(filepath);
+
+			if(rmiServer == null) {
+				ws.FileInfo info = wsServer.getFileInfo(filepath);
+				System.out.println("file "+filepath+" md5: "+info.getMd5());
+				System.out.println(local_file.md5);
+				return !info.getMd5().equals( local_file.md5 );
+			}
+			else
+			{
+				FileInfo info = rmiServer.getFileInfo(filepath);
+				System.out.println("file "+filepath+" md5: "+info.md5);
+				System.out.println(local_file.md5);
+				return !info.md5.equals( local_file.md5 );
+			}
+		} catch(Exception e) {
+			e.getMessage();
+			return true;
+		}
+	}
+
+
+
+	private FileContent getRemoteFileContent( String file ) {
+		try
+		{
+			if(rmiServer == null)
+			{
+				ws.FileContent content = wsServer.getFileContent( file );
+				return new FileContent( content.getName(), content.getLength(), toDate( content.getModified()), content.isIsFile(), content.getContent() );
+				//return content.getContent();
+			}
+			else
+			{
+				return rmiServer.getFileContent( file );
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println("Exception in 'CP fromServer': "+e.getMessage());
+			e.printStackTrace();
+			return new FileContent( "", 0, new Date(), false, new byte[0] );
+		}			
+	}
+
+
+
+	private boolean syncFile(String base, String file) 
+	{
+		try {
+
+			OutputStream os = null;
+
+			try {
+				createFile(base+"/"+file, getRemoteFileContent( base + "/" + file ));
+	    } finally {
+        return true;
+	    }
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+
+
 	private boolean syncAllFilesAndFolders(String path) {
+			//System.out.println("entraaaa");
 		try {
 			String[] folders;
 
@@ -650,20 +769,28 @@ public class DropboxServer
 
 			if( folders != null) 
 			{
-				System.out.println( folders.length);
+				//System.out.println( folders.length + " " +path);
 				for( int i = 0; i < folders.length; i++)
 				{
-					System.out.println( folders[i] );
-					String curr_file = path + "/" + folders[i];
+					//System.out.println( folders[i] );
+					String abs_path = path + "/" + folders[i];
+					//System.out.println(isFile(abs_path));
 
-					//@TODO
-					//if is dir 
-					//{
-						//if folder doesnt exist create folder
-						//return syncAllFilesAndFolders( curr_file );
-					//}
-					//else
-						//return syncFile( curr_file );
+					if( !isFile(abs_path) && !folders[i].startsWith(".")) 
+					{
+						mkdir( abs_path );
+						syncAllFilesAndFolders(abs_path);
+					} 
+					else if( isFileSyncable(path, folders[i]) ) 
+					{
+    				if( syncFile( path, folders[i] ) ) {
+  						System.out.println("Synchronized file: " + abs_path);
+    				} else {
+    					System.out.println("Couldn't sync file: " + abs_path);
+    				}
+					} else {
+    					System.out.println("File not synced: " + abs_path);
+					}
 				}
 				return true;
 			} 
@@ -679,10 +806,11 @@ public class DropboxServer
 	}
 
 
+
 	private static String writeTmpFile(byte[] content)
 	{
 		try {
-			String base = "./syn_dir/.tmp/";
+			String base = "./sync_dir/.tmp/";
 			SecureRandom random = new SecureRandom();
 
 			String path = new BigInteger(130, random).toString(32);
@@ -693,7 +821,7 @@ public class DropboxServer
 
 	    raf.close();
 
-	    return path;
+	    return base+"/"+path;
 
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -741,6 +869,17 @@ public class DropboxServer
 	    
 	 return checksum;
 	}
+
+
+
+
+	public static Date toDate(XMLGregorianCalendar calendar){
+	 if(calendar == null) {
+     return null;
+	 }
+	 return calendar.toGregorianCalendar().getTime();
+	}
+
 
 	/**
 	*
