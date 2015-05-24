@@ -372,7 +372,7 @@ public class DropboxServer
 		}
 		catch(ServerNotActiveException e){};
 
-		String url = baseUrl+"metadata/auto/" + path + "?list=false";
+		String url = baseUrl+"metadata/auto/" + path + "?list=true";
 		OAuthRequest request = new OAuthRequest(Verb.GET, url);
 		this.service.signRequest(this.accessToken, request);
 		Response response = request.send();
@@ -386,66 +386,156 @@ public class DropboxServer
 		try
 		{
 			JSONObject file = (JSONObject) parser.parse(response.getBody());
-			boolean isFile = !(boolean)file.get("is_dir");
-			if(!isFile)
-			{
-				System.out.println("O path " + path + "não corresponde a um ficheiro");
-				throw new InfoNotFoundException("O path " + path + "não corresponde a um ficheiro");
-			}
 				
 			String name = (String) file.get("path");
 			int index = name.lastIndexOf("/");
 			if(index > -1);
 				name = name.substring(index+1);
 			Date dt = new Date((String)file.get("modified"));
-			return new FileInfo(name, (long)file.get("bytes"), dt, isFile, 0, 0);
+			boolean isDir = (boolean)file.get("is_dir");
+			int childrenFiles = 0;
+			int childrenDirectories = 0;
+			if(isDir)
+			{
+				System.out.println("Is Dir");
+				JSONArray contents = (JSONArray)file.get("contents");
+				Iterator it = contents.iterator();
+				while(it.hasNext())
+				{
+					JSONObject content = (JSONObject) it.next();
+					if((boolean)content.get("is_dir"))
+						childrenDirectories++;
+					else childrenFiles++;			
+				}
+				System.out.println("childrenDirectories: " + childrenDirectories);
+				System.out.println("childrenFiles: " + childrenFiles);
+			}
+
+			return new FileInfo(name, (long)file.get("bytes"), dt, !isDir, childrenDirectories, childrenFiles);			
 		}
 		catch(Exception e)
-		{
+		{			
+			e.printStackTrace();
 			return null;
 		}
 
 	}
 
+
+	// TODO - NOT WORKING YET
 	public FileContent getFileContent(String path) throws RemoteException, InfoNotFoundException, IOException 
-	{		
-		System.out.println("Pedido de 'File Content' do cliente " + checkClientHost());
+	{
+		System.out.println();		
+		try
+		{
+			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
+			System.out.println("Pedido 'Get File Content' do cliente " + client_ip);
+			System.out.println("Para o ficheiro " + path);
+		}
+		catch(ServerNotActiveException e){};		
 
-			File f = new File( basePath, path );
-
-			if( f.exists() && f.isFile() ) {
-
-				RandomAccessFile raf = new RandomAccessFile( f, "r" );
-				byte []b = new byte[safeLongToInt(raf.length())];
-				raf.readFully(b);
-				raf.close();
-
-				return new FileContent( path, f.length(), new Date(f.lastModified()), f.isFile(), b);
+		String url = "https://api-content.dropbox.com/1/"+"files/auto/" + path;
+		OAuthRequest request = new OAuthRequest(Verb.GET, url);
+		this.service.signRequest(this.accessToken, request);
+		Response response = request.send();
+		if(response.getCode() == 404)
+		{
+			System.out.println("Not found: " + url);
+			throw new InfoNotFoundException("File "+ path + " not found");
+		}
+			
+		else
+			if (response.getCode() != 200)
+			{
+				System.out.println("not 200: " + response.getCode());
+				throw new RuntimeException("Metadata response code:" + response.getCode());
 			}
-			else
-				throw new InfoNotFoundException( "File not found :" + path);
-
-
+				
+		JSONParser parser = new JSONParser();
+		try
+		{
+			JSONObject file = (JSONObject) parser.parse(response.getHeader("x-dropbox-metadata"));
+			System.out.println(file);
+		
+			String name = (String) file.get("path");
+			int index = name.lastIndexOf("/");
+			if(index > -1);
+				name = name.substring(index+1);
+			Date dt = new Date((String)file.get("modified"));
+			long size = (long) file.get("bytes");
+			int sizeInt = (int) size;
+			InputStream is = response.getStream();
+			byte[] bytes = new byte[sizeInt];
+			int read = 0;
+			int len = 0;
+			while(len != -1)
+			{			
+				len = is.read(bytes,read,sizeInt-read);
+				read += len;
+			}
+			return new FileContent( name, (long)file.get("bytes"), dt, !(boolean)file.get("is_dir"), bytes);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			return null;
+		}		
 	}
 
+
+	// TODO
 	public boolean createFile(String path, FileContent file) throws RemoteException, InfoNotFoundException, IOException 
 	{		
-		System.out.println("Pedido de 'Create file' do cliente " + checkClientHost());
+		System.out.println();		
+		try
+		{
+			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
+			System.out.println("Pedido 'Create File' do cliente " + client_ip);
+			System.out.println("Novo ficheiro " + path);
+		}
+		catch(ServerNotActiveException e){};		
 
-    try {
-      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
+		try
+		{
+			String url = "https://api-content.dropbox.com/1/files_put/auto/" + path+"?locale=English";
+			OAuthRequest request = new OAuthRequest(Verb.PUT, url);
+			this.service.signRequest(this.accessToken, request);
+			request.addHeader("Content-Length", Long.toString(file.length));
+			request.addHeader("Content-Type", "application/octet-stream");
+			request.addPayload(file.content);
+			Response response = request.send();
 
-      raf.write(file.content);
-
-      raf.close();
-    } catch(Exception e) {
-    	System.out.println("erro:"+e.getMessage());
-    	throw new IOException(e.getMessage());
-    }
-    return true;
-
-
+			if(response.getCode() == 409)
+			{
+				System.out.println("Conflict (409)");
+				return false;
+			}
+				
+			else
+				if (response.getCode() == 411)
+				{
+					System.out.println("Missing Content-Length (411)");
+					return false;
+				}
+				else
+					if(response.getCode() != 200)
+					{
+						System.out.println("Status Code " + response.getCode());
+						JSONParser parser = new JSONParser();
+						JSONObject file2 = (JSONObject) parser.parse(response.getBody());
+						System.out.println((String) file2.get("error"));
+						return false;
+					}			
+			return true;	
+		}
+		catch(Exception e)
+		{
+			System.out.println("Excepção...");
+			e.printStackTrace();
+			return false;
+		}	
 	}
+	
 
 	public static int safeLongToInt(long l) {
     if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {

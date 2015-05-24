@@ -277,6 +277,8 @@ public class FileClient
 	protected boolean cp( String fromServer, boolean fromIsURL, String fromPath,
 							String toServer, boolean toIsURL, String toPath) 
 	{
+		System.out.println("Fromserver: " + fromServer);
+		System.out.println("fromPath: " + fromPath);
 		FileContent content = null;
 		ws.FileContent contentWs = null;
 		
@@ -307,6 +309,8 @@ public class FileClient
 		}
 		else
 		{
+			System.out.println("Server: " + fromServer);
+			System.out.println("Path: " + fromPath);
 			//o ficheiro esta na directoria de um servidor
 			try
 			{
