@@ -64,6 +64,7 @@ public class DropboxServer
 	private boolean primary;
 	private boolean verified;
 	private String serverToSync;
+	private boolean firstSync;
 
 	private int ping_interval = 3;
 	
@@ -77,6 +78,7 @@ public class DropboxServer
 		this.protocol = "rmi";
 		this.primary = false;
 		this.verified = false;
+		this.firstSync = false;
 	}
 
 	private boolean connectToDropbox()
@@ -281,32 +283,42 @@ public class DropboxServer
 			System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
 		}
 		catch(ServerNotActiveException e){};
+		if(this.primary || this.firstSync)
+		{
+			String url = baseUrl + "fileops/create_folder";
 
-		String url = baseUrl + "fileops/create_folder";
+			OAuthRequest request = new OAuthRequest(Verb.POST, url);
+			request.addBodyParameter("root", "auto");
+			request.addBodyParameter("path", dir);
+			this.service.signRequest(this.accessToken, request);
+			Response response = request.send();
 
-		OAuthRequest request = new OAuthRequest(Verb.POST, url);
-		request.addBodyParameter("root", "auto");
-		request.addBodyParameter("path", dir);
-		this.service.signRequest(this.accessToken, request);
-		Response response = request.send();
+			if (response.getCode() != 200)
+				return false;
+			else
+			{
+				if(this.primary)					
+					try
+					{
+						IContactServer contato = connectToContact();
+						contato.orderSync(this.fileServerName);	
+					}
+					catch(Exception e)
+					{
+						System.out.println("Erro ordering Sync");
+						e.printStackTrace();
+					}
+			}
 
-		if (response.getCode() != 200)
-			return false;
+			return true;
+		}
 		else
 		{
-			try
-			{
-				IContactServer contato = connectToContact();
-				contato.orderSync(this.fileServerName);	
-			}
-			catch(Exception e)
-			{
-				System.out.println("Erro ordering Sync");
-				e.printStackTrace();
-			}
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
+			return false;
 		}
-
-		return true;
+		
 	}
 	
 	@Override
@@ -319,47 +331,56 @@ public class DropboxServer
 		}
 		catch(ServerNotActiveException e){};
 		
-		String url = baseUrl + "fileops/delete";
-		try
+		if(this.primary || this.firstSync)
 		{
-			if(this.isDir(dir))
+			String url = baseUrl + "fileops/delete";
+			try
 			{
-				OAuthRequest request = new OAuthRequest(Verb.POST, url);
-				request.addBodyParameter("root", "auto");
-				request.addBodyParameter("path", dir);
-				this.service.signRequest(this.accessToken, request);
-				Response response = request.send();
+				if(this.isDir(dir))
+				{
+					OAuthRequest request = new OAuthRequest(Verb.POST, url);
+					request.addBodyParameter("root", "auto");
+					request.addBodyParameter("path", dir);
+					this.service.signRequest(this.accessToken, request);
+					Response response = request.send();
 
-				if (response.getCode() != 200)
-					return false;
+					if (response.getCode() != 200)
+						return false;
+					else
+					{
+						if(this.primary)
+							try
+							{
+								IContactServer contato = connectToContact();
+								contato.orderSync(this.fileServerName);	
+							}
+							catch(Exception e)
+							{
+								System.out.println("Erro ordering Sync");
+								e.printStackTrace();
+							}
+					}
+
+					return true;	
+				}
 				else
 				{
-					try
-					{
-						IContactServer contato = connectToContact();
-						contato.orderSync(this.fileServerName);	
-					}
-					catch(Exception e)
-					{
-						System.out.println("Erro ordering Sync");
-						e.printStackTrace();
-					}
+					System.out.println("Not a directory");
+					return false;
 				}
-
-				return true;	
+					
 			}
-			else
+			catch(Exception e)
 			{
-				System.out.println("Not a directory");
 				return false;
 			}
-				
 		}
-		catch(Exception e)
+		else
 		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
 			return false;
 		}
-		
 	}
 	
 	@Override
@@ -372,44 +393,54 @@ public class DropboxServer
 		}
 		catch(ServerNotActiveException e){};
 		
-		String url = baseUrl + "fileops/delete";
-		try
+		if(this.primary || this.firstSync)
 		{
-			if(!this.isDir(path))
+			String url = baseUrl + "fileops/delete";
+			try
 			{
-				OAuthRequest request = new OAuthRequest(Verb.POST, url);
-				request.addBodyParameter("root", "auto");
-				request.addBodyParameter("path", path);
-				this.service.signRequest(this.accessToken, request);
-				Response response = request.send();
+				if(!this.isDir(path))
+				{
+					OAuthRequest request = new OAuthRequest(Verb.POST, url);
+					request.addBodyParameter("root", "auto");
+					request.addBodyParameter("path", path);
+					this.service.signRequest(this.accessToken, request);
+					Response response = request.send();
 
-				if (response.getCode() != 200)
-					return false;
+					if (response.getCode() != 200)
+						return false;
+					else
+					{
+						if(this.primary)
+							try
+							{
+								IContactServer contato = connectToContact();
+								contato.orderSync(this.fileServerName);	
+							}
+							catch(Exception e)
+							{
+								System.out.println("Erro ordering Sync");
+								e.printStackTrace();
+							}
+					}
+
+					return true;	
+				}
 				else
 				{
-					try
-					{
-						IContactServer contato = connectToContact();
-						contato.orderSync(this.fileServerName);	
-					}
-					catch(Exception e)
-					{
-						System.out.println("Erro ordering Sync");
-						e.printStackTrace();
-					}
+					System.out.println("Not a file");
+					return false;
 				}
-
-				return true;	
+					
 			}
-			else
+			catch(Exception e)
 			{
-				System.out.println("Not a file");
 				return false;
 			}
-				
 		}
-		catch(Exception e)
+		else
 		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
 			return false;
 		}
 	}
@@ -571,60 +602,69 @@ public class DropboxServer
 		}
 		catch(ServerNotActiveException e){};		
 
-		try
+		if(this.primary || this.firstSync)
 		{
-
-			String url = "https://api-content.dropbox.com/1/files_put/auto/" + path+"?locale=English";
-		
-
-			OAuthRequest request = new OAuthRequest(Verb.PUT, url);
-			this.service.signRequest(this.accessToken, request);
-			request.addHeader("Content-Length", Long.toString(file.length));
-			request.addHeader("Content-Type", "application/octet-stream");
-			request.addPayload(file.content);
-			Response response = request.send();
-
-			if(response.getCode() == 409)
+			try
 			{
-				System.out.println("Conflict (409)");
-				return false;
-			}
-				
-			else
-				if (response.getCode() == 411)
+
+				String url = "https://api-content.dropbox.com/1/files_put/auto/" + path+"?locale=English";
+			
+
+				OAuthRequest request = new OAuthRequest(Verb.PUT, url);
+				this.service.signRequest(this.accessToken, request);
+				request.addHeader("Content-Length", Long.toString(file.length));
+				request.addHeader("Content-Type", "application/octet-stream");
+				request.addPayload(file.content);
+				Response response = request.send();
+
+				if(response.getCode() == 409)
 				{
-					System.out.println("Missing Content-Length (411)");
+					System.out.println("Conflict (409)");
 					return false;
 				}
+					
 				else
-					if(response.getCode() != 200)
+					if (response.getCode() == 411)
 					{
-						System.out.println("Status Code " + response.getCode());
-						JSONParser parser = new JSONParser();
-						JSONObject file2 = (JSONObject) parser.parse(response.getBody());
-						System.out.println((String) file2.get("error"));
+						System.out.println("Missing Content-Length (411)");
 						return false;
 					}
 					else
-					{
-						try
+						if(response.getCode() != 200)
 						{
-							IContactServer contato = connectToContact();
-							contato.orderSync(this.fileServerName);	
+							System.out.println("Status Code " + response.getCode());
+							JSONParser parser = new JSONParser();
+							JSONObject file2 = (JSONObject) parser.parse(response.getBody());
+							System.out.println((String) file2.get("error"));
+							return false;
 						}
-						catch(Exception e)
+						else
 						{
-							System.out.println("Erro ordering Sync");
-							e.printStackTrace();
-						}
-						
-					}	
-			return true;	
+							if(this.primary)
+								try
+								{
+									IContactServer contato = connectToContact();
+									contato.orderSync(this.fileServerName);	
+								}
+								catch(Exception e)
+								{
+									System.out.println("Erro ordering Sync");
+									e.printStackTrace();
+								}							
+						}	
+				return true;	
+			}
+			catch(Exception e)
+			{
+				System.out.println("Excepção...");
+				e.printStackTrace();
+				return false;
+			}
 		}
-		catch(Exception e)
+		else
 		{
-			System.out.println("Excepção...");
-			e.printStackTrace();
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
 			return false;
 		}	
 	}
@@ -682,6 +722,7 @@ public class DropboxServer
 		try {
 			//	@TODO
 			String[] folders;
+			this.firstSync = true;
 
 			if(url.startsWith("http"))
 			{
@@ -696,15 +737,18 @@ public class DropboxServer
 			//Sync root directory
 			if( this.syncAllFilesAndFolders( SYNC_PATH ) ) 
 			{
+				this.firstSync = false;
 				return true;
 			}
 			else
 			{
+				this.firstSync = false;
 				return false;
 			}
 
 
 		} catch(Exception e) {
+			this.firstSync = false;
 			System.out.println(e.getMessage());
 			return false;
 		}
@@ -807,7 +851,7 @@ public class DropboxServer
 
 
 	private boolean syncAllFilesAndFolders(String path) {
-			//System.out.println("entraaaa");
+			System.out.println("entraaaa");
 		try {
 			String[] folders;
 
@@ -818,13 +862,14 @@ public class DropboxServer
 			}
 			else
 			{
+				System.out.println("Folders rmi");
 				folders = rmiServer.dir(path);
 			}
 
 
 			if( folders != null) 
 			{
-				//System.out.println( folders.length + " " +path);
+				System.out.println( folders.length + " " +path);
 				for( int i = 0; i < folders.length; i++)
 				{
 					//System.out.println( folders[i] );

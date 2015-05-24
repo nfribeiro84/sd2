@@ -34,6 +34,7 @@ public class FileServer
 	private String fileServerName;
 	private String protocol;
 	private boolean primary;
+	private boolean firstSync;
 
 	private int ping_interval = 3;
 
@@ -53,6 +54,7 @@ public class FileServer
 		this.contactServerURL = "rmi://" + url;
 		this.fileServerName = name;
 		this.protocol = "rmi";
+		this.firstSync = false;
 	}
 	
 	private IContactServer connectToContact() throws Exception
@@ -125,7 +127,7 @@ public class FileServer
 			System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
 		}
 		catch(ServerNotActiveException e){};
-		if(primary)
+		if(primary || firstSync)
 			return createDir( basePath, dir );
 		else
 		{
@@ -147,17 +149,18 @@ public class FileServer
 				boolean success = directorio.mkdir();
 				if(success)
 				{
-					try
-					{
-						IContactServer contato = connectToContact();
-						contato.orderSync(this.fileServerName);	
-					}
-					catch(Exception e)
-					{
-						System.out.println("Erro ordering Sync");
-						e.printStackTrace();
-					}
-					return success;
+					if(this.primary)
+						try
+						{
+							IContactServer contato = connectToContact();
+							contato.orderSync(this.fileServerName);	
+						}
+						catch(Exception e)
+						{
+							System.out.println("Erro ordering Sync");
+							e.printStackTrace();
+						}
+						return success;
 				}
 					
 			}
@@ -180,14 +183,14 @@ public class FileServer
 		}
 		catch(ServerNotActiveException e){};
 
-		if(primary)
+		if(this.primary || this.firstSync)
 		{
 			File directorio = new File(basePath, dir);
 			String[] children = directorio.list();
 			for(String child : children)
 				return false;
 			boolean success = directorio.delete();
-			if(success)
+			if(success && this.primary)
 				{
 					try
 					{
@@ -217,12 +220,12 @@ public class FileServer
 	{
 		System.out.println("Pedido 'Remove File' do cliente " + checkClientHost());
 		File ficheiro = new File(basePath, path);
-		if(primary)
+		if(this.primary || this.firstSync)
 		{
 			if(ficheiro.isFile())
 			{
 				boolean success = ficheiro.delete();
-				if(success)
+				if(success && this.primary)
 				{
 					try
 					{
@@ -320,15 +323,18 @@ public class FileServer
 	public boolean createFile(String path, FileContent file) throws RemoteException, InfoNotFoundException, IOException 
 	{		
 		System.out.println("Pedido de 'Create file' do cliente " + checkClientHost());
-		if(primary)
+		if(this.primary || this.firstSync)
 		{			
 		    try {
 		      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
 
 		      raf.write(file.content);
-		    
-					IContactServer contato = connectToContact();
+		    	if(this.primary)
+		    	{
+		    		IContactServer contato = connectToContact();
 					contato.orderSync(this.fileServerName);
+		    	}
+					
 				
 		      raf.close();
 		    } catch(Exception e) {
@@ -387,6 +393,7 @@ public class FileServer
 	{
 		System.out.println("Start sync with: " + url + " on path: " + SYNC_PATH);
 		try {
+			this.firstSync = true;
 			//	@TODO
 			String[] folders;
 
@@ -403,15 +410,18 @@ public class FileServer
 			//Sync root directory
 			if( this.syncAllFilesAndFolders( SYNC_PATH ) ) 
 			{
+				this.firstSync = false;
 				return true;
 			}
 			else
 			{
+				this.firstSync = false;
 				return false;
 			}
 
 
 		} catch(Exception e) {
+			this.firstSync = false;
 			System.out.println(e.getMessage());
 			return false;
 		}
