@@ -525,8 +525,13 @@ public class FileServer
 			}
 
 
+
+
 			if( folders != null) 
 			{
+				//delete files/folders that are not present on the primary server
+				deleteInexistantElements(path, folders);
+
 				//System.out.println( folders.length + " " +path);
 				for( int i = 0; i < folders.length; i++)
 				{
@@ -563,6 +568,32 @@ public class FileServer
 		}
 	}
 
+
+
+	private static boolean deleteInexistantElements(String path, String[] folders) 
+	{
+		try 
+		{
+			File f = new File( path );
+			List<String> arrayl = Arrays.asList(folders);//.contains(yourValue)
+			if( f.exists() )
+			{
+				for( String s : f.list() )
+				{
+					System.out.println(s);
+					if(!arrayl.contains(s)) 
+					{
+						File ficheiro = new File(path, s);
+						ficheiro.delete();
+					}
+				}
+			}
+			return true;
+		} catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 
 
 	/*

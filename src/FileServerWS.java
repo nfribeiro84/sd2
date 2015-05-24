@@ -37,6 +37,7 @@ public class FileServerWS implements Runnable
 	private String fileServerName;
 	private String protocol;
 	private boolean primary;
+	private boolean firstSync;
 
 	private int ping_interval = 3;
 
@@ -115,8 +116,16 @@ public class FileServerWS implements Runnable
 	{
 		try
 		{
-			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
-			System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
+			if(this.primary || this.firstSync) {
+				String client_ip = java.rmi.server.RemoteServer.getClientHost();	
+				System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
+			}
+			else
+			{
+				System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+				System.out.println();
+				return false;
+			}
 		}
 		catch(ServerNotActiveException e){};
 
@@ -158,25 +167,45 @@ public class FileServerWS implements Runnable
 	@WebMethod
 	public boolean rmdir(String dir)
 	{
-		String client_ip = checkClientHost();	
-		System.out.println("Pedido 'Remove DIR' do cliente " + client_ip);
-		
-		File directorio = new File(basePath, dir);
-		String[] children = directorio.list();
-		for(String child : children)
+		if( this.primary || this.firstSync) {
+
+			String client_ip = checkClientHost();	
+			System.out.println("Pedido 'Remove DIR' do cliente " + client_ip);
+			
+			File directorio = new File(basePath, dir);
+			String[] children = directorio.list();
+			for(String child : children)
+				return false;
+			return directorio.delete();
+
+		}
+		else
+		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
 			return false;
-		return directorio.delete();
+		}
 	}
 	
 	
 	@WebMethod
 	public boolean rmfile(String path)
 	{
-		System.out.println("Pedido 'Remove File' do cliente " + checkClientHost());
-		File ficheiro = new File(basePath, path);
-		if(ficheiro.isFile())
-			return ficheiro.delete();
-		else return false;
+		if(this.primary || this.firstSync) {
+
+			System.out.println("Pedido 'Remove File' do cliente " + checkClientHost());
+			File ficheiro = new File(basePath, path);
+			if(ficheiro.isFile())
+				return ficheiro.delete();
+			else return false;
+
+		}
+		else
+		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
+			return false;
+		}
 	}
 
 	
@@ -374,6 +403,10 @@ public class FileServerWS implements Runnable
 
 			if( folders != null) 
 			{
+
+				//delete files/folders that are not present on the primary server
+				deleteInexistantElements(path, folders);
+
 				//System.out.println( folders.length + " " +path);
 				for( int i = 0; i < folders.length; i++)
 				{
@@ -404,6 +437,37 @@ public class FileServerWS implements Runnable
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+
+
+	private static boolean deleteInexistantElements(String path, String[] folders) 
+	{
+		System.out.println("entraaaaaaaaaaaa");
+		try 
+		{
+			File f = new File( path );
+			List<String> arrayl = Arrays.asList(folders);//.contains(yourValue)
+			
+			if( f.exists() )
+			{
+				for( String s : f.list() )
+				{
+						System.out.println("111111 delete file "+s);
+					System.out.println(s);
+					if(arrayl.contains(s)) 
+					{
+						File ficheiro = new File(path, s);
+						//ficheiro.delete();
+						System.out.println("delete file "+s);
+					}
+				}
+			}
+			return true;
+		} catch(Exception e) {
+			e.printStackTrace();
 			return false;
 		}
 	}
@@ -470,14 +534,23 @@ public class FileServerWS implements Runnable
 		System.out.println("Pedido de 'Create file' do cliente " + checkClientHost());
 
     try {
-      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
 
-      raf.write(file.content);
+    	if (this.primary || this.firstSync) {
+	      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
 
-			IContactServer contato = connectToContact();
-			contato.orderSync(this.fileServerName);	
+	      raf.write(file.content);
 
-      raf.close();
+				IContactServer contato = connectToContact();
+				contato.orderSync(this.fileServerName);	
+
+	      raf.close();
+			}
+			else
+			{
+				System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+				System.out.println();
+				return false;
+			}
     } catch(Exception e) {
     	System.out.println("erro:"+e.getMessage());
     	throw new IOException(e.getMessage());
