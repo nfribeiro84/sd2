@@ -326,16 +326,9 @@ public class FileServer
 		      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
 
 		      raf.write(file.content);
-		    	try
-				{
+		    
 					IContactServer contato = connectToContact();
-					contato.orderSync(this.fileServerName);	
-				}
-				catch(Exception e)
-				{
-					System.out.println("Erro ordering Sync");
-					e.printStackTrace();
-				}
+					contato.orderSync(this.fileServerName);
 				
 		      raf.close();
 		    } catch(Exception e) {

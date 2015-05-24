@@ -306,6 +306,7 @@ public class ContactServer
 		}
 	}
 
+	@Override
 	public void orderSync(String name) throws RemoteException
 	{
 		System.out.println();

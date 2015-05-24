@@ -132,7 +132,21 @@ public class FileServerWS implements Runnable
 		if(!directorio.exists()) {
 			try
 			{
-				return directorio.mkdir();
+				boolean success = directorio.mkdir();
+				if(success)
+				{
+					try
+					{
+						IContactServer contato = connectToContact();
+						contato.orderSync(this.fileServerName);	
+						return success;
+					}
+					catch(Exception e)
+					{
+						System.out.println("Erro ordering Sync");
+						e.printStackTrace();
+					}	
+				}
 			}
 			catch(SecurityException e){ System.out.println(e.getMessage() );};
 		}	
@@ -459,6 +473,9 @@ public class FileServerWS implements Runnable
       RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
 
       raf.write(file.content);
+
+			IContactServer contato = connectToContact();
+			contato.orderSync(this.fileServerName);	
 
       raf.close();
     } catch(Exception e) {
