@@ -486,7 +486,7 @@ public class FileServer
 	/*
 	* Calculate checksum of a File using MD5 algorithm
 	*/
-	public static String checkSum(String path){
+	private static String checkSum(String path){
 	  String checksum = null;
 	  try {
       FileInputStream fis = new FileInputStream(path);
