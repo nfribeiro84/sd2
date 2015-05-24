@@ -306,6 +306,32 @@ public class ContactServer
 		}
 	}
 
+	public void orderSync(String name) throws RemoteException
+	{
+		System.out.println();
+		System.out.println("Sync Ordered");
+		int synced = 0;
+		List<String> ips = this.fileServers.get(name);
+		for(int i=1; i<ips.size() ; i++)
+		{
+			try
+			{
+				if(syncServers(ips.get(0), ips.get(i)))
+					synced++;
+				else
+					System.out.println("Unable to sync with server at " + ips.get(i));	
+			}
+			catch(Exception e)
+			{
+				System.out.println("Unable to sync with server at " + ips.get(i));
+				e.printStackTrace();
+			}
+			
+		}
+		if(synced > 0)
+			System.out.println("Successfully synced " + synced + " servers");
+	}
+
 	/**
 	*
 	*		END SYNC

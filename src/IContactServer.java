@@ -25,5 +25,9 @@ public interface IContactServer extends Remote
 	 * Resfresca o ultimo contacto do servidor de ficheiros na timetable.
 	 */
 	public boolean ping(String name, String protocol) throws RemoteException;
-	
+
+	/**
+	* Recebe um pedido de um servidor primário para informar os secundários para efectuarem uma sincronização
+	*/
+	public void orderSync(String name) throws RemoteException;
 }
