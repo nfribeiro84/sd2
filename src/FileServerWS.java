@@ -445,7 +445,6 @@ public class FileServerWS implements Runnable
 
 	private static boolean deleteInexistantElements(String path, String[] folders) 
 	{
-		System.out.println("entraaaaaaaaaaaa");
 		try 
 		{
 			File f = new File( path );
@@ -455,9 +454,7 @@ public class FileServerWS implements Runnable
 			{
 				for( String s : f.list() )
 				{
-						System.out.println("111111 delete file "+s);
-					System.out.println(s);
-					if(arrayl.contains(s)) 
+					if(!arrayl.contains(s)) 
 					{
 						File ficheiro = new File(path, s);
 						//ficheiro.delete();
