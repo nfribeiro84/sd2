@@ -292,6 +292,19 @@ public class DropboxServer
 
 		if (response.getCode() != 200)
 			return false;
+		else
+		{
+			try
+			{
+				IContactServer contato = connectToContact();
+				contato.orderSync(this.fileServerName);	
+			}
+			catch(Exception e)
+			{
+				System.out.println("Erro ordering Sync");
+				e.printStackTrace();
+			}
+		}
 
 		return true;
 	}
@@ -319,6 +332,19 @@ public class DropboxServer
 
 				if (response.getCode() != 200)
 					return false;
+				else
+				{
+					try
+					{
+						IContactServer contato = connectToContact();
+						contato.orderSync(this.fileServerName);	
+					}
+					catch(Exception e)
+					{
+						System.out.println("Erro ordering Sync");
+						e.printStackTrace();
+					}
+				}
 
 				return true;	
 			}
@@ -359,6 +385,19 @@ public class DropboxServer
 
 				if (response.getCode() != 200)
 					return false;
+				else
+				{
+					try
+					{
+						IContactServer contato = connectToContact();
+						contato.orderSync(this.fileServerName);	
+					}
+					catch(Exception e)
+					{
+						System.out.println("Erro ordering Sync");
+						e.printStackTrace();
+					}
+				}
 
 				return true;	
 			}
@@ -565,7 +604,21 @@ public class DropboxServer
 						JSONObject file2 = (JSONObject) parser.parse(response.getBody());
 						System.out.println((String) file2.get("error"));
 						return false;
-					}			
+					}
+					else
+					{
+						try
+						{
+							IContactServer contato = connectToContact();
+							contato.orderSync(this.fileServerName);	
+						}
+						catch(Exception e)
+						{
+							System.out.println("Erro ordering Sync");
+							e.printStackTrace();
+						}
+						
+					}	
 			return true;	
 		}
 		catch(Exception e)

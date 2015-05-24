@@ -157,7 +157,7 @@ public class FileServer
 						System.out.println("Erro ordering Sync");
 						e.printStackTrace();
 					}
-					
+					return success;
 				}
 					
 			}
@@ -186,7 +186,22 @@ public class FileServer
 			String[] children = directorio.list();
 			for(String child : children)
 				return false;
-			return directorio.delete();	
+			boolean success = directorio.delete();
+			if(success)
+				{
+					try
+					{
+						IContactServer contato = connectToContact();
+						contato.orderSync(this.fileServerName);	
+					}
+					catch(Exception e)
+					{
+						System.out.println("Erro ordering Sync");
+						e.printStackTrace();
+					}
+					
+				}	
+			return success;
 		}
 		else
 		{
@@ -205,7 +220,24 @@ public class FileServer
 		if(primary)
 		{
 			if(ficheiro.isFile())
-				return ficheiro.delete();
+			{
+				boolean success = ficheiro.delete();
+				if(success)
+				{
+					try
+					{
+						IContactServer contato = connectToContact();
+						contato.orderSync(this.fileServerName);	
+					}
+					catch(Exception e)
+					{
+						System.out.println("Erro ordering Sync");
+						e.printStackTrace();
+					}
+					return success;
+				}
+				else return false;
+			}
 			else return false;	
 		}
 		else
@@ -294,7 +326,17 @@ public class FileServer
 		      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
 
 		      raf.write(file.content);
-
+		    	try
+				{
+					IContactServer contato = connectToContact();
+					contato.orderSync(this.fileServerName);	
+				}
+				catch(Exception e)
+				{
+					System.out.println("Erro ordering Sync");
+					e.printStackTrace();
+				}
+				
 		      raf.close();
 		    } catch(Exception e) {
 		    	System.out.println("erro:"+e.getMessage());
