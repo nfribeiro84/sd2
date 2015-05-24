@@ -403,17 +403,17 @@ public class FileServer
 			}			
 	}
 
-	private boolean syncFile(String basePath, String file) 
+	private boolean syncFile(String base, String file) 
 	{
 		try {
 
 			OutputStream os = null;
 
 			try {
-				byte[] content = getRemoteFileContent( basePath + "/" + file );
+				byte[] content = getRemoteFileContent( base + "/" + file );
         
-        //os = new FileOutputStream(abs_path);
-        os = new FileOutputStream("/Users/kae/Documents/workspace/eclipse-projects/fct/sd/sd2/sync_dir/.tmp/" + file);
+        os = new FileOutputStream(base + "/" + file);
+        //os = new FileOutputStream("/Users/kae/Documents/workspace/eclipse-projects/fct/sd/sd2/sync_dir/.tmp/" + file);
         
         os.write(content);
         
