@@ -458,7 +458,7 @@ public class FileServerWS implements Runnable
 					{
 						File ficheiro = new File(path, s);
 						//ficheiro.delete();
-						System.out.println("delete file "+s);
+						System.out.println("Deleted file: "+s);
 					}
 				}
 			}

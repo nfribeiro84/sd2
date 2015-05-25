@@ -586,15 +586,16 @@ public class FileServer
 		{
 			File f = new File( path );
 			List<String> arrayl = Arrays.asList(folders);//.contains(yourValue)
+			
 			if( f.exists() )
 			{
 				for( String s : f.list() )
 				{
-					System.out.println(s);
 					if(!arrayl.contains(s)) 
 					{
 						File ficheiro = new File(path, s);
 						ficheiro.delete();
+						System.out.println("Deleted file: "+s);
 					}
 				}
 			}
