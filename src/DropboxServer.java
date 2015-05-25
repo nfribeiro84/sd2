@@ -869,6 +869,10 @@ public class DropboxServer
 
 			if( folders != null) 
 			{
+
+				//delete files/folders that are not present on the primary server
+				deleteInexistantElements(path, folders);
+
 				System.out.println( folders.length + " " +path);
 				for( int i = 0; i < folders.length; i++)
 				{
@@ -905,6 +909,34 @@ public class DropboxServer
 		}
 	}
 
+
+
+	private boolean deleteInexistantElements(String path, String[] folders) 
+	{
+		try 
+		{
+			File f = new File( path );
+			List<String> arrayl = Arrays.asList(folders);//.contains(yourValue)
+			
+			if( f.exists() )
+			{
+				for( String s : f.list() )
+				{
+					if(!arrayl.contains(s)) 
+					{
+						if(rmfile(path+"/"+s))
+							System.out.println("Deleted file: "+s);
+						else
+							return false;
+					}
+				}
+			}
+			return true;
+		} catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 
 
 	private static String writeTmpFile(byte[] content)
