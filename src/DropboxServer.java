@@ -798,15 +798,15 @@ public class DropboxServer
 
 			if(rmiServer == null) {
 				ws.FileInfo info = wsServer.getFileInfo(filepath);
-				System.out.println("file "+filepath+" md5: "+info.getLength());
-				System.out.println(local_file.length);
+				//System.out.println("file "+filepath+" md5: "+info.getLength());
+				//System.out.println(local_file.length);
 				return info.getLength() != local_file.length;
 			}
 			else
 			{
 				FileInfo info = rmiServer.getFileInfo(filepath);
-				System.out.println("file "+filepath+" md5: "+info.length);
-				System.out.println(local_file.length);
+				//System.out.println("file "+filepath+" md5: "+info.length);
+				//System.out.println(local_file.length);
 				return info.length != local_file.length;
 			}
 		} catch(Exception e) {

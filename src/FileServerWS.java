@@ -323,15 +323,15 @@ public class FileServerWS implements Runnable
 		try {
 			if(rmiServer == null) {
 				ws.FileInfo info = wsServer.getFileInfo(path);
-				System.out.println("file "+path+" md5: "+info.getMd5());
-				System.out.println(checkSum(path));
+				//System.out.println("file "+path+" md5: "+info.getMd5());
+				//System.out.println(checkSum(path));
 				return info.isIsFile() && !info.getMd5().equals( checkSum(path) );
 			}
 			else
 			{
 				FileInfo info = rmiServer.getFileInfo(path);
-				System.out.println("file "+path+" md5: "+info.md5);
-				System.out.println(checkSum(path));
+				//System.out.println("file "+path+" md5: "+info.md5);
+				//System.out.println(checkSum(path));
 				return info.isFile && !info.md5.equals( checkSum(path) );
 			}
 		} catch(Exception e) {

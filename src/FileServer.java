@@ -461,15 +461,15 @@ public class FileServer
 			String filepath = path + "/" + file;
 			if(rmiServer == null) {
 				ws.FileInfo info = wsServer.getFileInfo(filepath);
-				System.out.println("file "+filepath+" md5: "+info.getMd5());
-				System.out.println(checkSum(filepath));
+				//System.out.println("file "+filepath+" md5: "+info.getMd5());
+				//System.out.println(checkSum(filepath));
 				return !info.getMd5().equals( checkSum(filepath) );
 			}
 			else
 			{
 				FileInfo info = rmiServer.getFileInfo(filepath);
-				System.out.println("file "+filepath+" md5: "+info.md5);
-				System.out.println(checkSum(filepath));
+				//System.out.println("file "+filepath+" md5: "+info.md5);
+				//System.out.println(checkSum(filepath));
 				return !info.md5.equals( checkSum(filepath) );
 			}
 		} catch(Exception e) {
