@@ -116,20 +116,21 @@ public class FileServerWS implements Runnable
 	{
 		try
 		{
-			if(this.primary || this.firstSync) {
-				String client_ip = java.rmi.server.RemoteServer.getClientHost();	
-				System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
-			}
-			else
-			{
-				System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
-				System.out.println();
-				return false;
-			}
+			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
+			System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
 		}
 		catch(ServerNotActiveException e){};
 
-		return createDir( basePath, dir );
+		if(this.primary || this.firstSync) 
+		{
+			return createDir( basePath, dir );		
+		}
+		else
+		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
+			return false;
+		}
 	}
 
 
@@ -142,7 +143,7 @@ public class FileServerWS implements Runnable
 			try
 			{
 				boolean success = directorio.mkdir();
-				if(success)
+				if(success && this.primary)
 				{
 					try
 					{
@@ -156,6 +157,8 @@ public class FileServerWS implements Runnable
 						e.printStackTrace();
 					}	
 				}
+
+				return success;
 			}
 			catch(SecurityException e){ System.out.println(e.getMessage() );};
 		}	
@@ -167,17 +170,37 @@ public class FileServerWS implements Runnable
 	@WebMethod
 	public boolean rmdir(String dir)
 	{
-		if( this.primary || this.firstSync) {
-
-			String client_ip = checkClientHost();	
+		try
+		{
+			String client_ip = java.rmi.server.RemoteServer.getClientHost();	
 			System.out.println("Pedido 'Remove DIR' do cliente " + client_ip);
-			
+		}
+		catch(ServerNotActiveException e){};
+
+		if(this.primary || this.firstSync)
+		{
 			File directorio = new File(basePath, dir);
 			String[] children = directorio.list();
+			
 			for(String child : children)
 				return false;
-			return directorio.delete();
 
+			boolean success = directorio.delete();
+			if(success && this.primary)
+				{
+					try
+					{
+						IContactServer contato = connectToContact();
+						contato.orderSync(this.fileServerName);	
+					}
+					catch(Exception e)
+					{
+						System.out.println("Erro ordering Sync");
+						e.printStackTrace();
+					}
+					
+				}	
+			return success;
 		}
 		else
 		{
@@ -191,14 +214,30 @@ public class FileServerWS implements Runnable
 	@WebMethod
 	public boolean rmfile(String path)
 	{
-		if(this.primary || this.firstSync) {
-
-			System.out.println("Pedido 'Remove File' do cliente " + checkClientHost());
-			File ficheiro = new File(basePath, path);
+		System.out.println("Pedido 'Remove File' do cliente " + checkClientHost());
+		File ficheiro = new File(basePath, path);
+		if(this.primary || this.firstSync)
+		{
 			if(ficheiro.isFile())
-				return ficheiro.delete();
-			else return false;
-
+			{
+				boolean success = ficheiro.delete();
+				if(success && this.primary)
+				{
+					try
+					{
+						IContactServer contato = connectToContact();
+						contato.orderSync(this.fileServerName);	
+					}
+					catch(Exception e)
+					{
+						System.out.println("Erro ordering Sync");
+						e.printStackTrace();
+					}
+					return success;
+				}
+				else return false;
+			}
+			else return false;	
 		}
 		else
 		{
@@ -529,30 +568,32 @@ public class FileServerWS implements Runnable
 	public boolean createFile(String path, FileContent file) throws InfoNotFoundException, IOException 
 	{		
 		System.out.println("Pedido de 'Create file' do cliente " + checkClientHost());
+		if(this.primary || this.firstSync)
+		{			
+		    try {
+		      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
 
-    try {
-
-    	if (this.primary || this.firstSync) {
-	      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
-
-	      raf.write(file.content);
-
-				IContactServer contato = connectToContact();
-				contato.orderSync(this.fileServerName);	
-
-	      raf.close();
-			}
-			else
-			{
-				System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
-				System.out.println();
-				return false;
-			}
-    } catch(Exception e) {
-    	System.out.println("erro:"+e.getMessage());
-    	throw new IOException(e.getMessage());
-    }
-    return true;
+		      raf.write(file.content);
+		    	if(this.primary)
+		    	{
+		    		IContactServer contato = connectToContact();
+					contato.orderSync(this.fileServerName);
+		    	}
+					
+				
+		      raf.close();
+		    } catch(Exception e) {
+		    	System.out.println("erro:"+e.getMessage());
+		    	throw new IOException(e.getMessage());
+		    }
+			return true;
+		}
+		else
+		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
+			return false;
+		}
 	}
 
 	public static int safeLongToInt(long l) {
