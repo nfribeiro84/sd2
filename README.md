@@ -1,4 +1,4 @@
-# sd1
+# sd2
 Trabalho Prático 2 de Sistemas Distribuídos
 
 
