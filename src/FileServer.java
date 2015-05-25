@@ -188,7 +188,8 @@ public class FileServer
 			File directorio = new File(basePath, dir);
 			String[] children = directorio.list();
 			for(String child : children)
-				return false;
+				rmdir(dir+"/"+child);
+				//return false;
 			boolean success = directorio.delete();
 			if(success && this.primary)
 				{
