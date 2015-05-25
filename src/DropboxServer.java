@@ -947,8 +947,13 @@ public class DropboxServer
 				{
 					if(!arrayl.contains(parseFilename(s))) 
 					{
-						if(rmfile(removeBar(s)))
-							System.out.println("Deleted file: "+s);
+						System.out.println("REMOVE "+removeBar(s));
+						if(this.isDir(removeBar(s)))
+						{
+							if(rmdir(removeBar(s))) System.out.println("Deleted file: "+s);
+						} else {
+							if(rmfile(removeBar(s))) System.out.println("Deleted file: "+s);
+						}
 					}
 				}
 			}

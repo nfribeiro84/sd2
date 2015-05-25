@@ -34,5 +34,11 @@ ou
 javac -d ./bin -cp "lib/*" -sourcepath src src/*.java
 
 
+#comandos uteis
+cp README.md FileServer@sync_dir/readme.md
 
+mkdir FileServer@sync_dir/ola
 
+rmdir FileServer@sync_dir/ola
+
+rm FileServer@sync_dir/readme.md

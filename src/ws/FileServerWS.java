@@ -125,6 +125,53 @@ public interface FileServerWS {
 
     /**
      * 
+     * @param arg0
+     * @return
+     *     returns ws.FileContent
+     * @throws IOException_Exception
+     * @throws InfoNotFoundException_Exception
+     */
+    @WebMethod
+    @WebResult(targetNamespace = "")
+    @RequestWrapper(localName = "getFileContent", targetNamespace = "http://ws.srv/", className = "ws.GetFileContent")
+    @ResponseWrapper(localName = "getFileContentResponse", targetNamespace = "http://ws.srv/", className = "ws.GetFileContentResponse")
+    @Action(input = "http://ws.srv/FileServerWS/getFileContentRequest", output = "http://ws.srv/FileServerWS/getFileContentResponse", fault = {
+        @FaultAction(className = InfoNotFoundException_Exception.class, value = "http://ws.srv/FileServerWS/getFileContent/Fault/InfoNotFoundException"),
+        @FaultAction(className = IOException_Exception.class, value = "http://ws.srv/FileServerWS/getFileContent/Fault/IOException")
+    })
+    public FileContent getFileContent(
+        @WebParam(name = "arg0", targetNamespace = "")
+        String arg0)
+        throws IOException_Exception, InfoNotFoundException_Exception
+    ;
+
+    /**
+     * 
+     * @param arg1
+     * @param arg0
+     * @return
+     *     returns boolean
+     * @throws IOException_Exception
+     * @throws InfoNotFoundException_Exception
+     */
+    @WebMethod
+    @WebResult(targetNamespace = "")
+    @RequestWrapper(localName = "createFile", targetNamespace = "http://ws.srv/", className = "ws.CreateFile")
+    @ResponseWrapper(localName = "createFileResponse", targetNamespace = "http://ws.srv/", className = "ws.CreateFileResponse")
+    @Action(input = "http://ws.srv/FileServerWS/createFileRequest", output = "http://ws.srv/FileServerWS/createFileResponse", fault = {
+        @FaultAction(className = InfoNotFoundException_Exception.class, value = "http://ws.srv/FileServerWS/createFile/Fault/InfoNotFoundException"),
+        @FaultAction(className = IOException_Exception.class, value = "http://ws.srv/FileServerWS/createFile/Fault/IOException")
+    })
+    public boolean createFile(
+        @WebParam(name = "arg0", targetNamespace = "")
+        String arg0,
+        @WebParam(name = "arg1", targetNamespace = "")
+        FileContent arg1)
+        throws IOException_Exception, InfoNotFoundException_Exception
+    ;
+
+    /**
+     * 
      * @return
      *     returns boolean
      */
@@ -149,53 +196,6 @@ public interface FileServerWS {
     public boolean syncWith(
         @WebParam(name = "arg0", targetNamespace = "")
         String arg0);
-
-    /**
-     * 
-     * @param arg0
-     * @return
-     *     returns ws.FileContent
-     * @throws InfoNotFoundException_Exception
-     * @throws IOException_Exception
-     */
-    @WebMethod
-    @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "getFileContent", targetNamespace = "http://ws.srv/", className = "ws.GetFileContent")
-    @ResponseWrapper(localName = "getFileContentResponse", targetNamespace = "http://ws.srv/", className = "ws.GetFileContentResponse")
-    @Action(input = "http://ws.srv/FileServerWS/getFileContentRequest", output = "http://ws.srv/FileServerWS/getFileContentResponse", fault = {
-        @FaultAction(className = InfoNotFoundException_Exception.class, value = "http://ws.srv/FileServerWS/getFileContent/Fault/InfoNotFoundException"),
-        @FaultAction(className = IOException_Exception.class, value = "http://ws.srv/FileServerWS/getFileContent/Fault/IOException")
-    })
-    public FileContent getFileContent(
-        @WebParam(name = "arg0", targetNamespace = "")
-        String arg0)
-        throws IOException_Exception, InfoNotFoundException_Exception
-    ;
-
-    /**
-     * 
-     * @param arg1
-     * @param arg0
-     * @return
-     *     returns boolean
-     * @throws InfoNotFoundException_Exception
-     * @throws IOException_Exception
-     */
-    @WebMethod
-    @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "createFile", targetNamespace = "http://ws.srv/", className = "ws.CreateFile")
-    @ResponseWrapper(localName = "createFileResponse", targetNamespace = "http://ws.srv/", className = "ws.CreateFileResponse")
-    @Action(input = "http://ws.srv/FileServerWS/createFileRequest", output = "http://ws.srv/FileServerWS/createFileResponse", fault = {
-        @FaultAction(className = InfoNotFoundException_Exception.class, value = "http://ws.srv/FileServerWS/createFile/Fault/InfoNotFoundException"),
-        @FaultAction(className = IOException_Exception.class, value = "http://ws.srv/FileServerWS/createFile/Fault/IOException")
-    })
-    public boolean createFile(
-        @WebParam(name = "arg0", targetNamespace = "")
-        String arg0,
-        @WebParam(name = "arg1", targetNamespace = "")
-        FileContent arg1)
-        throws IOException_Exception, InfoNotFoundException_Exception
-    ;
 
     /**
      * 

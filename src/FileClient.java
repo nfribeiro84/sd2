@@ -297,6 +297,12 @@ public class FileClient
 					raf.close();
 
 					content =  new FileContent( fromPath, f.length(), new Date(f.lastModified()), f.isFile(), b);
+					contentWs =  new ws.FileContent();
+					contentWs.setName(fromPath);
+					contentWs.setLength(f.length());
+					contentWs.setIsFile(f.isFile());
+					contentWs.setContent(b);
+
 				}
 				catch(Exception e)
 				{
@@ -337,7 +343,6 @@ public class FileClient
 			return false;
 		}
 
-
 		boolean success = false;
 
 		//copiar o ficheiro para a maquina do cliente
@@ -352,6 +357,7 @@ public class FileClient
 			}
 			catch(Exception e) 
 			{
+				//e.printStackTrace();
 				System.out.println("Exception in 'CP toServer':"+e.getMessage());
 			    return false;
 			}
@@ -372,6 +378,7 @@ public class FileClient
 			}
 			catch(Exception e)
 			{
+				//e.printStackTrace();
 				System.out.println("Exception in 'CP toServer': "+e.getMessage());
 				return false;
 			}

@@ -11,6 +11,9 @@ public class FileContent implements java.io.Serializable
 	public boolean isFile;
 	public byte[] content;
 	
+	public FileContent( ) {
+	}
+	
 	public FileContent( String name, long length, Date modified, boolean isFile, byte[] content) {
 		this.name = name;
 		this.length = length;
@@ -25,6 +28,10 @@ public class FileContent implements java.io.Serializable
      return null;
 	 }
 	 return calendar.toGregorianCalendar().getTime();
+	}
+
+	public byte[] getContent() {
+		return this.content;
 	}
 
 

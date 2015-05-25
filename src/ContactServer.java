@@ -202,9 +202,6 @@ public class ContactServer
 					//remove o ip do nome do servidor correpondente
 					this.fileServers.remove(name);
 
-					//unbind server name from registry
-					Naming.unbind(name);
-
 					System.out.println("Removed servename: " + name);
 				}
 				else if (is_primary)
@@ -215,6 +212,11 @@ public class ContactServer
 					else
 						System.out.println("An error occured");
 				}
+
+				
+
+					//unbind server name from registry
+					Naming.unbind(name);
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());

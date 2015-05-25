@@ -298,6 +298,64 @@ public class FileServerWS implements Runnable
 
 
 
+	@WebMethod
+	public FileContent getFileContent(String path) throws InfoNotFoundException, IOException 
+	{		
+		System.out.println("Pedido de 'File Content' do cliente " + checkClientHost());
+
+		File f = new File( basePath, path );
+
+		if( f.exists() && f.isFile() ) {
+
+			RandomAccessFile raf = new RandomAccessFile( f, "r" );
+			byte []b = new byte[safeLongToInt(raf.length())];
+			raf.readFully(b);
+			raf.close();
+
+			return new FileContent( path, f.length(), new Date(f.lastModified()), f.isFile(), b);
+		}
+		else
+			throw new InfoNotFoundException( "File not found :" + path);
+	}
+
+
+
+	@WebMethod
+	public boolean createFile(String path, FileContent file) throws InfoNotFoundException, IOException 
+	{		
+		System.out.println("Pedido de 'Create file' do cliente " + checkClientHost());
+		if(this.primary || this.firstSync)
+		{			
+	    try {
+
+	    	System.out.println(basePath + "/" + path);
+	    	System.out.println(file);
+	      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
+	      
+				raf.write(file.getContent());
+	    	if(this.primary)
+	    	{
+	    		IContactServer contato = connectToContact();
+					contato.orderSync(this.fileServerName);
+	    	}
+				
+			
+	      raf.close();
+	    } catch(Exception e) {
+	    	//e.printStackTrace();
+	    	System.out.println("erro:"+e.getMessage());
+	    	return false;
+	    	//throw new IOException(e.getMessage());
+	    }
+			return true;
+		}
+		else
+		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
+			return false;
+		}
+	}
 
 
 
@@ -544,57 +602,6 @@ public class FileServerWS implements Runnable
 	*			END SYNC
 	*
 	*/
-
-	public FileContent getFileContent(String path) throws InfoNotFoundException, IOException 
-	{		
-		System.out.println("Pedido de 'File Content' do cliente " + checkClientHost());
-
-		File f = new File( basePath, path );
-
-		if( f.exists() && f.isFile() ) {
-
-			RandomAccessFile raf = new RandomAccessFile( f, "r" );
-			byte []b = new byte[safeLongToInt(raf.length())];
-			raf.readFully(b);
-			raf.close();
-
-			return new FileContent( path, f.length(), new Date(f.lastModified()), f.isFile(), b);
-		}
-		else
-			throw new InfoNotFoundException( "File not found :" + path);
-	}
-
-
-	public boolean createFile(String path, FileContent file) throws InfoNotFoundException, IOException 
-	{		
-		System.out.println("Pedido de 'Create file' do cliente " + checkClientHost());
-		if(this.primary || this.firstSync)
-		{			
-		    try {
-		      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
-
-		      raf.write(file.content);
-		    	if(this.primary)
-		    	{
-		    		IContactServer contato = connectToContact();
-					contato.orderSync(this.fileServerName);
-		    	}
-					
-				
-		      raf.close();
-		    } catch(Exception e) {
-		    	System.out.println("erro:"+e.getMessage());
-		    	throw new IOException(e.getMessage());
-		    }
-			return true;
-		}
-		else
-		{
-			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
-			System.out.println();
-			return false;
-		}
-	}
 
 	public static int safeLongToInt(long l) {
     if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
