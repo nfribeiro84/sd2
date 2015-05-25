@@ -29,7 +29,7 @@ ou
 javac -d ./bin -cp "lib/*" -sourcepath src src/*.java
 
 #Executar
-java -cp ./bin:.:"lib/*" DropboxServer . localhost/myContactServer DServer
+java -cp ./bin:.:"lib/*" DropboxServer . localhost/myContactServer FileServer
 
 
 

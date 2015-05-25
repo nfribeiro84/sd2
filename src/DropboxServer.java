@@ -205,12 +205,19 @@ public class DropboxServer
 		
 
 		String url = baseUrl+"metadata/auto/" + path + "?list=false";
+					System.out.println(url);
+					System.out.println(this.accessToken);
 		OAuthRequest request = new OAuthRequest(Verb.GET, url);
 		this.service.signRequest(this.accessToken, request);
 		Response response = request.send();
 
 		if (response.getCode() != 200)
+		{
+							JSONParser parser = new JSONParser();
+							JSONObject file2 = (JSONObject) parser.parse(response.getBody());
+							System.out.println((String) file2.get("error"));
 			throw new RuntimeException("Metadata response code:" + response.getCode());
+		}
 
 		try
 		{
@@ -393,6 +400,8 @@ public class DropboxServer
 		}
 		catch(ServerNotActiveException e){};
 		
+					System.out.println("entraaaaaaaaaaa");
+					System.out.println(path);
 		if(this.primary || this.firstSync)
 		{
 			String url = baseUrl + "fileops/delete";
@@ -434,6 +443,7 @@ public class DropboxServer
 			}
 			catch(Exception e)
 			{
+				System.out.println("_________________"+e.getMessage());
 				return false;
 			}
 		}
@@ -788,16 +798,16 @@ public class DropboxServer
 
 			if(rmiServer == null) {
 				ws.FileInfo info = wsServer.getFileInfo(filepath);
-				System.out.println("file "+filepath+" md5: "+info.getMd5());
-				System.out.println(local_file.md5);
-				return !info.getMd5().equals( local_file.md5 );
+				System.out.println("file "+filepath+" md5: "+info.getLength());
+				System.out.println(local_file.length);
+				return info.getLength() != local_file.length;
 			}
 			else
 			{
 				FileInfo info = rmiServer.getFileInfo(filepath);
-				System.out.println("file "+filepath+" md5: "+info.md5);
-				System.out.println(local_file.md5);
-				return !info.md5.equals( local_file.md5 );
+				System.out.println("file "+filepath+" md5: "+info.length);
+				System.out.println(local_file.length);
+				return info.length != local_file.length;
 			}
 		} catch(Exception e) {
 			e.getMessage();
@@ -851,7 +861,7 @@ public class DropboxServer
 
 
 	private boolean syncAllFilesAndFolders(String path) {
-			System.out.println("entraaaa");
+			
 		try {
 			String[] folders;
 
@@ -909,25 +919,36 @@ public class DropboxServer
 		}
 	}
 
+	private String parseFilename(String s)
+	{
+		return s.substring(s.lastIndexOf("/")+1);
+	}
+
+	private String removeBar(String s) {
+		if(s.startsWith("/")) return removeBar(s.substring(1));
+		else return s;
+	}
+
 
 
 	private boolean deleteInexistantElements(String path, String[] folders) 
 	{
+		System.out.println();
 		try 
 		{
-			File f = new File( path );
+			//File f = new File( path );
+			String[] local_files = dir(path);
+
 			List<String> arrayl = Arrays.asList(folders);//.contains(yourValue)
 			
-			if( f.exists() )
+			if( local_files != null )
 			{
-				for( String s : f.list() )
+				for( String s : local_files )
 				{
-					if(!arrayl.contains(s)) 
+					if(!arrayl.contains(parseFilename(s))) 
 					{
-						if(rmfile(path+"/"+s))
+						if(rmfile(removeBar(s)))
 							System.out.println("Deleted file: "+s);
-						else
-							return false;
 					}
 				}
 			}

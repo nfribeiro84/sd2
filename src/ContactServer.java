@@ -189,6 +189,7 @@ public class ContactServer
 	private void removeServer(String name, String url) {
 
 		try {
+
 			List<String> ips = this.fileServers.get(name);
 			
 			if(ips != null) {
@@ -197,12 +198,12 @@ public class ContactServer
 				
 				ips.remove(url);
 				
-					Naming.unbind(name);
 				if (ips.size() == 0) {
 					//remove o ip do nome do servidor correpondente
 					this.fileServers.remove(name);
 
 					//unbind server name from registry
+					Naming.unbind(name);
 
 					System.out.println("Removed servename: " + name);
 				}
@@ -223,7 +224,7 @@ public class ContactServer
 
 
 	private void checkServerStatus(){
-		
+
 		List<String> result = new CopyOnWriteArrayList<String>();
 		for (Map.Entry<String, List<String>> entry : fileServers.entrySet())
 		{
