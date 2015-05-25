@@ -1,5 +1,5 @@
 # sd1
-Trabalho Prático 1 de Sistemas Distribuídos
+Trabalho Prático 2 de Sistemas Distribuídos
 
 
 # File servers (from root dir)
