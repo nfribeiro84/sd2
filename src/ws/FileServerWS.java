@@ -52,21 +52,6 @@ public interface FileServerWS {
 
     /**
      * 
-     * @param arg0
-     * @return
-     *     returns boolean
-     */
-    @WebMethod
-    @WebResult(targetNamespace = "")
-    @RequestWrapper(localName = "rmdir", targetNamespace = "http://ws.srv/", className = "ws.Rmdir")
-    @ResponseWrapper(localName = "rmdirResponse", targetNamespace = "http://ws.srv/", className = "ws.RmdirResponse")
-    @Action(input = "http://ws.srv/FileServerWS/rmdirRequest", output = "http://ws.srv/FileServerWS/rmdirResponse")
-    public boolean rmdir(
-        @WebParam(name = "arg0", targetNamespace = "")
-        String arg0);
-
-    /**
-     * 
      * @param arg1
      * @param arg0
      * @return
@@ -87,6 +72,21 @@ public interface FileServerWS {
         String arg1)
         throws IOException_Exception
     ;
+
+    /**
+     * 
+     * @param arg0
+     * @return
+     *     returns boolean
+     */
+    @WebMethod
+    @WebResult(targetNamespace = "")
+    @RequestWrapper(localName = "rmdir", targetNamespace = "http://ws.srv/", className = "ws.Rmdir")
+    @ResponseWrapper(localName = "rmdirResponse", targetNamespace = "http://ws.srv/", className = "ws.RmdirResponse")
+    @Action(input = "http://ws.srv/FileServerWS/rmdirRequest", output = "http://ws.srv/FileServerWS/rmdirResponse")
+    public boolean rmdir(
+        @WebParam(name = "arg0", targetNamespace = "")
+        String arg0);
 
     /**
      * 
@@ -151,8 +151,8 @@ public interface FileServerWS {
      * @param arg0
      * @return
      *     returns boolean
-     * @throws InfoNotFoundException_Exception
      * @throws IOException_Exception
+     * @throws InfoNotFoundException_Exception
      */
     @WebMethod
     @WebResult(targetNamespace = "")
@@ -169,6 +169,33 @@ public interface FileServerWS {
         FileContent arg1)
         throws IOException_Exception, InfoNotFoundException_Exception
     ;
+
+    /**
+     * 
+     * @return
+     *     returns boolean
+     */
+    @WebMethod
+    @WebResult(targetNamespace = "")
+    @RequestWrapper(localName = "setAsPrimary", targetNamespace = "http://ws.srv/", className = "ws.SetAsPrimary")
+    @ResponseWrapper(localName = "setAsPrimaryResponse", targetNamespace = "http://ws.srv/", className = "ws.SetAsPrimaryResponse")
+    @Action(input = "http://ws.srv/FileServerWS/setAsPrimaryRequest", output = "http://ws.srv/FileServerWS/setAsPrimaryResponse")
+    public boolean setAsPrimary();
+
+    /**
+     * 
+     * @param arg0
+     * @return
+     *     returns boolean
+     */
+    @WebMethod
+    @WebResult(targetNamespace = "")
+    @RequestWrapper(localName = "syncWith", targetNamespace = "http://ws.srv/", className = "ws.SyncWith")
+    @ResponseWrapper(localName = "syncWithResponse", targetNamespace = "http://ws.srv/", className = "ws.SyncWithResponse")
+    @Action(input = "http://ws.srv/FileServerWS/syncWithRequest", output = "http://ws.srv/FileServerWS/syncWithResponse")
+    public boolean syncWith(
+        @WebParam(name = "arg0", targetNamespace = "")
+        String arg0);
 
     /**
      * 

@@ -24,6 +24,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="isFile" type="{http://www.w3.org/2001/XMLSchema}boolean"/>
  *         &lt;element name="childrenFiles" type="{http://www.w3.org/2001/XMLSchema}int"/>
  *         &lt;element name="childrenDirectories" type="{http://www.w3.org/2001/XMLSchema}int"/>
+ *         &lt;element name="md5" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -39,7 +40,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "modified",
     "isFile",
     "childrenFiles",
-    "childrenDirectories"
+    "childrenDirectories",
+    "md5"
 })
 public class FileInfo {
 
@@ -50,6 +52,7 @@ public class FileInfo {
     protected boolean isFile;
     protected int childrenFiles;
     protected int childrenDirectories;
+    protected String md5;
 
     /**
      * Gets the value of the name property.
@@ -161,6 +164,30 @@ public class FileInfo {
      */
     public void setChildrenDirectories(int value) {
         this.childrenDirectories = value;
+    }
+
+    /**
+     * Gets the value of the md5 property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getMd5() {
+        return md5;
+    }
+
+    /**
+     * Sets the value of the md5 property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setMd5(String value) {
+        this.md5 = value;
     }
 
 }

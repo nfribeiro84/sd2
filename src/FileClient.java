@@ -254,7 +254,7 @@ public class FileClient
 			if(rmiServer == null) {
 				ws.FileInfo info = wsServer.getFileInfo(path);
 
-				return new FileInfo( info.getName(), info.getLength(), toDate( info.getModified()), info.isIsFile(), info.getChildrenDirectories(), info.getChildrenFiles() );
+				return new FileInfo( info.getName(), info.getLength(), toDate( info.getModified()), info.isIsFile(), info.getChildrenDirectories(), info.getChildrenFiles(), info.getMd5() );
 			}
 			else
 				return rmiServer.getFileInfo(path);
@@ -277,6 +277,8 @@ public class FileClient
 	protected boolean cp( String fromServer, boolean fromIsURL, String fromPath,
 							String toServer, boolean toIsURL, String toPath) 
 	{
+		System.out.println("Fromserver: " + fromServer);
+		System.out.println("fromPath: " + fromPath);
 		FileContent content = null;
 		ws.FileContent contentWs = null;
 		
@@ -295,6 +297,12 @@ public class FileClient
 					raf.close();
 
 					content =  new FileContent( fromPath, f.length(), new Date(f.lastModified()), f.isFile(), b);
+					contentWs =  new ws.FileContent();
+					contentWs.setName(fromPath);
+					contentWs.setLength(f.length());
+					contentWs.setIsFile(f.isFile());
+					contentWs.setContent(b);
+
 				}
 				catch(Exception e)
 				{
@@ -307,6 +315,8 @@ public class FileClient
 		}
 		else
 		{
+			System.out.println("Server: " + fromServer);
+			System.out.println("Path: " + fromPath);
 			//o ficheiro esta na directoria de um servidor
 			try
 			{
@@ -333,7 +343,6 @@ public class FileClient
 			return false;
 		}
 
-
 		boolean success = false;
 
 		//copiar o ficheiro para a maquina do cliente
@@ -348,6 +357,7 @@ public class FileClient
 			}
 			catch(Exception e) 
 			{
+				//e.printStackTrace();
 				System.out.println("Exception in 'CP toServer':"+e.getMessage());
 			    return false;
 			}
@@ -368,6 +378,7 @@ public class FileClient
 			}
 			catch(Exception e)
 			{
+				//e.printStackTrace();
 				System.out.println("Exception in 'CP toServer': "+e.getMessage());
 				return false;
 			}

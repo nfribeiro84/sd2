@@ -8,6 +8,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.sql.Timestamp;
 import java.io.*;
 
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import javax.xml.namespace.QName;
+import ws.FileServerWSService;
+
 public class ContactServer
 		extends UnicastRemoteObject
 		implements IContactServer, Runnable
@@ -39,6 +45,11 @@ public class ContactServer
 	}
 
 
+	private FileServerWSService createWsServer(String url) throws Exception {
+		return new FileServerWSService( new URL(url), new QName("http://ws.srv/", "FileServerWSService"));
+	}
+
+
 	@Override
 	public String[] servers() throws RemoteException 
 	{
@@ -64,20 +75,24 @@ public class ContactServer
 		}
 	}
 
-	//@Override
-	public boolean subscribe(String name, String protocol) throws RemoteException, ServerExistsException{
+	/**
+	*		Returns -1 in case of error
+	*		Returns 1 in case the server is primary
+	*		Returns > 1 in case the server is not primary
+	*/
+	public int subscribe(String name, String protocol) throws RemoteException, ServerExistsException{
 		String client_ip = "";
 		try {
 			client_ip = java.rmi.server.RemoteServer.getClientHost();
 		} catch (ServerNotActiveException e) {
 			System.out.println("Error subscribing:" + e.getMessage());
+			return -1;
 		}
 
 		if (serverExists(name, client_ip, protocol))
 			throw new ServerExistsException("Server " + name + "@" + client_ip + " exists");
 
-		addServer(name, client_ip, protocol);
-		return true;
+		return addServer(name, client_ip, protocol);
 	}
 
 
@@ -109,32 +124,52 @@ public class ContactServer
   }
 
 	//@Override
-	private void addServer(String name, String ip, String protocol) {
+	private int addServer(String name, String ip, String protocol) {
+
 		List<String> ips = new CopyOnWriteArrayList<String>();
+		try {
 
-		String url = buildUrl(ip, name, protocol);
-		System.out.println(url);
+			String url = buildUrl(ip, name, protocol);
+			//System.out.println(url);
 
-		if(this.fileServers.containsKey(name))
-		{
-			ips = this.fileServers.get(name);
-
-			if(!ips.contains(url))
+			if(this.fileServers.containsKey(name))
 			{
-				ips.add(url);
+				ips = this.fileServers.get(name);
 
+				if(!ips.contains(url))
+				{
+					ips.add(url);
+
+					this.fileServers.put(name, ips);
+					System.out.println("Added server ip: " + ip + " to servename: " + name);
+
+					// trigger servers sync process
+					if(syncServers(getPrimaryServer(name), url))
+						System.out.println("Sync success");
+					else
+						System.out.println("Sync error occured");					
+				}
+			} else {
+				ips.add(url);
 				this.fileServers.put(name, ips);
 				System.out.println("Added server ip: " + ip + " to servename: " + name);
-			}
-		} else {
-			ips.add(url);
-			this.fileServers.put(name, ips);
-			System.out.println("Added server ip: " + ip + " to servename: " + name);
-		}
 
-		Date date = new Date();
-		this.timetable.put(url, new Timestamp(date.getTime()));
-		System.out.println("Added timetable to server: " + name + "@" + ip + ": " + this.timetable.get(name + "@" + ip));
+				if(setServerAsPrimary(url))
+					System.out.println("Set success");
+				else
+					System.out.println("An error occured");
+			}
+
+
+			Date date = new Date();
+			this.timetable.put(url, new Timestamp(date.getTime()));
+			System.out.println("Added timetable to server: " + name + "@" + ip + ": " + this.timetable.get(name + "@" + ip));
+
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+		}
+		
+		return ips.size();
 
 	}
 
@@ -153,20 +188,45 @@ public class ContactServer
 	//@Override
 	private void removeServer(String name, String url) {
 
-		List<String> ips = this.fileServers.get(name);
-		if(ips != null) {
-			ips.remove(url);
-			if (ips.size() == 0) {
-				//remove o ip do nome do servidor correpondente
-				this.fileServers.remove(name);
-				System.out.println("Removed servename: " + name);
+		try {
+
+			List<String> ips = this.fileServers.get(name);
+			
+			if(ips != null) {
+
+				boolean is_primary = ips.indexOf(url) == 0;
+				
+				ips.remove(url);
+				
+				if (ips.size() == 0) {
+					//remove o ip do nome do servidor correpondente
+					this.fileServers.remove(name);
+
+					System.out.println("Removed servename: " + name);
+				}
+				else if (is_primary)
+				{
+					System.out.println("Set "+ips.get(0)+" as primary");
+					if(setServerAsPrimary(ips.get(0)))
+						System.out.println("Set success");
+					else
+						System.out.println("An error occured");
+				}
+
+				
+
+					//unbind server name from registry
+					Naming.unbind(name);
 			}
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
 		}
 	}
 
 
+
 	private void checkServerStatus(){
-		
+
 		List<String> result = new CopyOnWriteArrayList<String>();
 		for (Map.Entry<String, List<String>> entry : fileServers.entrySet())
 		{
@@ -191,6 +251,96 @@ public class ContactServer
 		
 	}
 
+	/**
+	*
+	*		SYNC
+	*
+	*/
+
+	private boolean setServerAsPrimary(String url) throws Exception {
+
+		try
+		{	
+			if(url.startsWith("http"))
+			{
+				FileServerWSService service = createWsServer(url);
+				ws.FileServerWS wsServer = service.getFileServerWSPort();
+				return wsServer.setAsPrimary();
+			}
+			else
+			{
+				IFileServer rmiServer = (IFileServer) Naming.lookup(url);
+				return rmiServer.setAsPrimary();
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+	public String getPrimaryServer(String name) {
+		List<String> result = this.fileServers.get(name);
+		return result.get(0);
+	}
+
+	public boolean syncServers(String primary, String slave) throws Exception {
+		System.out.println("Syncinn servers " + primary + " and " + slave);
+
+		try
+		{	
+			if(slave.startsWith("http"))
+			{
+				FileServerWSService service = createWsServer(slave);
+				ws.FileServerWS wsServer = service.getFileServerWSPort();
+				return wsServer.syncWith(primary);
+			}
+			else
+			{
+				IFileServer rmiServer = (IFileServer) Naming.lookup(slave);
+				return rmiServer.syncWith(primary);
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+	@Override
+	public void orderSync(String name) throws RemoteException
+	{
+		System.out.println();
+		System.out.println("Sync Ordered");
+		int synced = 0;
+		List<String> ips = this.fileServers.get(name);
+		for(int i=1; i<ips.size() ; i++)
+		{
+			try
+			{
+				if(syncServers(ips.get(0), ips.get(i)))
+					synced++;
+				else
+					System.out.println("Unable to sync with server at " + ips.get(i));	
+			}
+			catch(Exception e)
+			{
+				System.out.println("Unable to sync with server at " + ips.get(i));
+				e.printStackTrace();
+			}
+			
+		}
+		if(synced > 0)
+			System.out.println("Successfully synced " + synced + " servers");
+	}
+
+	/**
+	*
+	*		END SYNC
+	*
+	*/
 
 
 

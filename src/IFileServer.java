@@ -45,4 +45,16 @@ public interface IFileServer extends Remote
 	*		Create a file in server
 	*/
 	public boolean createFile(String path, FileContent file) throws RemoteException, InfoNotFoundException, IOException;
+
+	/**
+	*		Create a file in server
+	*/
+	public boolean setAsPrimary() throws RemoteException;
+
+	/**
+	*		Create a file in server
+	*/
+	public boolean syncWith(String url) throws RemoteException;
+
+
 }

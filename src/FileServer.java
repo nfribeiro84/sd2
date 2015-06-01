@@ -6,6 +6,17 @@ import java.util.*;
 import java.io.*;
 import java.lang.Thread;
 
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import javax.xml.namespace.QName;
+import ws.FileServerWSService;
+
+//checksum
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 public class FileServer
 		extends UnicastRemoteObject
 		implements IFileServer, Runnable
@@ -22,8 +33,18 @@ public class FileServer
 	private String contactServerURL;
 	private String fileServerName;
 	private String protocol;
+	private boolean primary;
+	private boolean firstSync;
 
 	private int ping_interval = 3;
+
+	//SYNC VARS
+  private static final String SYNC_PATH = "./sync_dir";
+  private static final String TMP_FOLDER = "./sync_dir/.tmp";
+  
+	private IFileServer rmiServer;
+	private ws.FileServerWS wsServer;
+
 	
 	protected FileServer( String pathname, String url, String name) throws RemoteException 
 	{
@@ -33,6 +54,7 @@ public class FileServer
 		this.contactServerURL = "rmi://" + url;
 		this.fileServerName = name;
 		this.protocol = "rmi";
+		this.firstSync = false;
 	}
 	
 	private IContactServer connectToContact() throws Exception
@@ -43,8 +65,13 @@ public class FileServer
 	
 	private IContactServer subscribeToContact(IContactServer contactServer) throws Exception
 	{
-		if(contactServer.subscribe(this.fileServerName, this.protocol))
+		int res = contactServer.subscribe(this.fileServerName, this.protocol);
+		if( res != -1)
+		{
+			if (res == 1) this.primary = true;
+			//@todo fazer isto ao WS
 			return contactServer;
+		}
 		else throw new RemoteException("Couldn't conecto to contact server");
 	}
 	
@@ -100,16 +127,51 @@ public class FileServer
 			System.out.println("Pedido 'Make DIR' do cliente " + client_ip);
 		}
 		catch(ServerNotActiveException e){};
+		if(primary || firstSync)
+			return createDir( basePath, dir );
+		else
+		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
+			return false;
+		}
+	}
+
+
+
+	private boolean createDir(File basePath, String dir) {
+
 		File directorio = new File(basePath, dir);
-		if(!directorio.exists())
+		
+		if(!directorio.exists()) {
 			try
 			{
-				return directorio.mkdir();
+				boolean success = directorio.mkdir();
+				if(success)
+				{
+					if(this.primary)
+						try
+						{
+							IContactServer contato = connectToContact();
+							contato.orderSync(this.fileServerName);	
+						}
+						catch(Exception e)
+						{
+							System.out.println("Erro ordering Sync");
+							e.printStackTrace();
+						}
+						return success;
+				}
+					
 			}
-			catch(SecurityException e){return false;};
-		
+			catch(SecurityException e){ System.out.println(e.getMessage() );};
+		}	
 		return false;
 	}
+
+
+
+
 	
 	@Override
 	public boolean rmdir(String dir) throws RemoteException
@@ -120,11 +182,41 @@ public class FileServer
 			System.out.println("Pedido 'Remove DIR' do cliente " + client_ip);
 		}
 		catch(ServerNotActiveException e){};
-		File directorio = new File(basePath, dir);
-		String[] children = directorio.list();
-		for(String child : children)
+
+		if(this.primary || this.firstSync)
+		{
+			File directorio = new File(basePath, dir);
+			String[] children = directorio.list();
+			
+			for(String child : children)
+				return false;
+				//rmdir(dir+"/"+child);
+
+
+			boolean success = directorio.delete();
+			if(success && this.primary)
+				{
+					try
+					{
+						IContactServer contato = connectToContact();
+						contato.orderSync(this.fileServerName);	
+					}
+					catch(Exception e)
+					{
+						System.out.println("Erro ordering Sync");
+						e.printStackTrace();
+					}
+					
+				}	
+			return success;
+		}
+		else
+		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
 			return false;
-		return directorio.delete();
+		}
+		
 	}
 	
 	@Override
@@ -132,9 +224,35 @@ public class FileServer
 	{
 		System.out.println("Pedido 'Remove File' do cliente " + checkClientHost());
 		File ficheiro = new File(basePath, path);
-		if(ficheiro.isFile())
-			return ficheiro.delete();
-		else return false;
+		if(this.primary || this.firstSync)
+		{
+			if(ficheiro.isFile())
+			{
+				boolean success = ficheiro.delete();
+				if(success && this.primary)
+				{
+					try
+					{
+						IContactServer contato = connectToContact();
+						contato.orderSync(this.fileServerName);	
+					}
+					catch(Exception e)
+					{
+						System.out.println("Erro ordering Sync");
+						e.printStackTrace();
+					}
+					return success;
+				}
+				else return false;
+			}
+			else return false;	
+		}
+		else
+		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
+			return false;
+		}
 	}
 	
 	@Override
@@ -143,30 +261,32 @@ public class FileServer
 		System.out.println("Pedido 'Copy File' do cliente " + checkClientHost());
 
 		InputStream is = null;
-    OutputStream os = null;
-    try {
-        is = new FileInputStream(source);
-        os = new FileOutputStream(dest);
-        byte[] buffer = new byte[1024];
-        int length;
-        while ((length = is.read(buffer)) > 0) {
-            os.write(buffer, 0, length);
-        }
-    } finally {
-        is.close();
-        os.close();
-        return true;
-    }
+	    OutputStream os = null;
+	    try {
+	        is = new FileInputStream(source);
+	        os = new FileOutputStream(dest);
+	        byte[] buffer = new byte[1024];
+	        int length;
+	        while ((length = is.read(buffer)) > 0) {
+	            os.write(buffer, 0, length);
+	        }
+	    } finally {
+	        is.close();
+	        os.close();
+	        return true;
+	    }
 	}
 
 	@Override
 	public FileInfo getFileInfo(String path) throws RemoteException, InfoNotFoundException 
 	{
-		System.out.println("Pedido de 'File Info' do cliente " + checkClientHost());
+		System.out.println("Pedido de 'File Info' do cliente " + checkClientHost() + " para o ficheiro " + basePath+"/"+path);
 		File element = new File( basePath, path);
+
+
 		if( element.exists())
 			if(element.isFile())
-				return new FileInfo(element.getName(), element.length(), new Date(element.lastModified()), element.isFile(), 0, 0);
+				return new FileInfo(element.getName(), element.length(), new Date(element.lastModified()), element.isFile(), 0, 0, checkSum(basePath+"/"+path));
 			else
 			{
 				int directories = 0;
@@ -175,12 +295,15 @@ public class FileServer
 					if(new File(element,child).isDirectory())
 						directories++;
 					else files++;
-				return new FileInfo(element.getName(), 0, new Date(element.lastModified()), element.isFile(), directories, files);
+				return new FileInfo(element.getName(), 0, new Date(element.lastModified()), element.isFile(), directories, files, checkSum(basePath+"/"+path));
 			}
 				
 		else
 			throw new InfoNotFoundException( "Path not found :" + path);
 	}
+
+
+
 
 	public FileContent getFileContent(String path) throws RemoteException, InfoNotFoundException, IOException 
 	{		
@@ -199,26 +322,37 @@ public class FileServer
 			}
 			else
 				throw new InfoNotFoundException( "File not found :" + path);
-
-
 	}
 
 	public boolean createFile(String path, FileContent file) throws RemoteException, InfoNotFoundException, IOException 
 	{		
 		System.out.println("Pedido de 'Create file' do cliente " + checkClientHost());
+		if(this.primary || this.firstSync)
+		{			
+		    try {
+		      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
 
-    try {
-      RandomAccessFile raf = new RandomAccessFile(basePath + "/" + path, "rw");
-
-      raf.write(file.content);
-
-      raf.close();
-    } catch(Exception e) {
-    	System.out.println("erro:"+e.getMessage());
-    	throw new IOException(e.getMessage());
-    }
-    return true;
-
+		      raf.write(file.content);
+		    	if(this.primary)
+		    	{
+		    		IContactServer contato = connectToContact();
+					contato.orderSync(this.fileServerName);
+		    	}
+					
+				
+		      raf.close();
+		    } catch(Exception e) {
+		    	System.out.println("erro:"+e.getMessage());
+		    	throw new IOException(e.getMessage());
+		    }
+			return true;
+		}
+		else
+		{
+			System.out.println("I'm not Primary... I'm not allowed to perform Writing Actions... I'm sorry!");
+			System.out.println();
+			return false;
+		}
 
 	}
 
@@ -229,6 +363,286 @@ public class FileServer
     }
     return (int) l;
 	}
+
+
+
+
+
+
+
+	/**
+	*		SYNC
+	*
+	*/
+
+
+
+	@Override
+	public boolean setAsPrimary()
+	{
+		System.out.println("Set this as primary server");
+		this.primary = true;
+		return true;
+	}
+
+
+	private FileServerWSService createWsServer(String url) throws Exception {
+		return new FileServerWSService( new URL(url), new QName("http://ws.srv/", "FileServerWSService"));
+	}
+
+
+
+	@Override
+	public boolean syncWith(String url)
+	{
+		System.out.println("Start sync with: " + url + " on path: " + SYNC_PATH);
+		try {
+			this.firstSync = true;
+			//	@TODO
+			String[] folders;
+
+			if(url.startsWith("http"))
+			{
+				FileServerWSService service = createWsServer(url);
+				this.wsServer = service.getFileServerWSPort();
+			}
+			else
+			{
+				this.rmiServer = (IFileServer) Naming.lookup(url);
+			}
+
+			//Sync root directory
+			if( this.syncAllFilesAndFolders( SYNC_PATH ) ) 
+			{
+				this.firstSync = false;
+				return true;
+			}
+			else
+			{
+				this.firstSync = false;
+				return false;
+			}
+
+
+		} catch(Exception e) {
+			this.firstSync = false;
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+	// is remote path a file
+	private boolean isFile(String path)
+	{
+		try {
+			if(rmiServer == null) {
+				ws.FileInfo info = wsServer.getFileInfo(path);
+				return info.isIsFile();
+			}
+			else
+			{
+				FileInfo info = rmiServer.getFileInfo(path);
+				return info.isFile;
+			}
+		} catch(Exception e) {
+			e.getMessage();
+			return true;
+		}
+	}
+
+	private boolean isFileSyncable(String path, String file)
+	{
+		try {
+			if(file.startsWith(".")) {
+				System.out.println("Hidden file "+file);
+				return false;
+			}
+
+			String filepath = path + "/" + file;
+			if(rmiServer == null) {
+				ws.FileInfo info = wsServer.getFileInfo(filepath);
+				//System.out.println("file "+filepath+" md5: "+info.getMd5());
+				//System.out.println(checkSum(filepath));
+				return !info.getMd5().equals( checkSum(filepath) );
+			}
+			else
+			{
+				FileInfo info = rmiServer.getFileInfo(filepath);
+				//System.out.println("file "+filepath+" md5: "+info.md5);
+				//System.out.println(checkSum(filepath));
+				return !info.md5.equals( checkSum(filepath) );
+			}
+		} catch(Exception e) {
+			e.getMessage();
+			return true;
+		}
+	}
+
+	private byte[] getRemoteFileContent( String file ) {
+		try
+		{
+			if(rmiServer == null)
+			{
+				ws.FileContent content = wsServer.getFileContent( file );
+				return content.getContent();
+			}
+			else
+			{
+				FileContent content = rmiServer.getFileContent( file );
+				return content.content;
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println("Exception in 'CP fromServer': "+e.getMessage());
+			return new byte[0];
+		}			
+	}
+
+	private boolean syncFile(String base, String file) 
+	{
+		try {
+
+			OutputStream os = null;
+
+			try {
+				byte[] content = getRemoteFileContent( base + "/" + file );
+        
+        os = new FileOutputStream(base + "/" + file);
+        //os = new FileOutputStream("/Users/kae/Documents/workspace/eclipse-projects/fct/sd/sd2/sync_dir/.tmp/" + file);
+        
+        os.write(content);
+        
+	    } finally {
+        os.close();
+        return true;
+	    }
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+	private boolean syncAllFilesAndFolders(String path) {
+			//System.out.println("entraaaa");
+		try {
+			String[] folders;
+
+			if(this.rmiServer == null)
+			{
+				List<String> list = wsServer.dir(path);
+				folders = list.toArray(new String[list.size()]);
+			}
+			else
+			{
+				folders = rmiServer.dir(path);
+			}
+
+
+
+
+			if( folders != null) 
+			{
+				//delete files/folders that are not present on the primary server
+				deleteInexistantElements(path, folders);
+
+				//System.out.println( folders.length + " " +path);
+				for( int i = 0; i < folders.length; i++)
+				{
+					//System.out.println( folders[i] );
+					String abs_path = path + "/" + folders[i];
+					//System.out.println(isFile(abs_path));
+
+					if( !isFile(abs_path) && !folders[i].startsWith(".")) 
+					{
+						createDir(new File( path ), folders[i] );
+						syncAllFilesAndFolders(abs_path);
+					} 
+					else if( isFileSyncable(path, folders[i]) ) 
+					{
+    				if( syncFile( path, folders[i] ) ) {
+  						System.out.println("Synchronized file: " + abs_path);
+    				} else {
+    					System.out.println("Couldn't sync file: " + abs_path);
+    				}
+					} else {
+    					System.out.println("File not synced: " + abs_path);
+					}
+				}
+				return true;
+			} 
+			else
+			{
+				System.out.println( "Invalid folders array" );
+				return false;
+			}
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			return false;
+		}
+	}
+
+
+
+	private static boolean deleteInexistantElements(String path, String[] folders) 
+	{
+		try 
+		{
+			File f = new File( path );
+			List<String> arrayl = Arrays.asList(folders);//.contains(yourValue)
+			
+			if( f.exists() )
+			{
+				for( String s : f.list() )
+				{
+					if(!arrayl.contains(s)) 
+					{
+						File ficheiro = new File(path, s);
+						ficheiro.delete();
+						System.out.println("Deleted file: "+s);
+					}
+				}
+			}
+			return true;
+		} catch(Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+
+	/*
+	* Calculate checksum of a File using MD5 algorithm
+	*/
+	private static String checkSum(String path){
+	  String checksum = null;
+	  try {
+      FileInputStream fis = new FileInputStream(path);
+      MessageDigest md = MessageDigest.getInstance("MD5");
+    
+      //Using MessageDigest update() method to provide input
+      byte[] buffer = new byte[8192];
+      int numOfBytesRead;
+      while( (numOfBytesRead = fis.read(buffer)) > 0){
+          md.update(buffer, 0, numOfBytesRead);
+      }
+      byte[] hash = md.digest();
+      checksum = new BigInteger(1, hash).toString(16); //don't use this, truncates leading zero
+	  } catch (IOException ex) {
+      System.out.println(ex.getMessage());
+	  } catch (NoSuchAlgorithmException ex) {
+      System.out.println(ex.getMessage());
+	  }
+	    
+	 return checksum;
+	}
+
+
+
+	/**
+	*		END SYNC
+	*
+	*/
 
 
 
